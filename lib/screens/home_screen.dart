@@ -361,110 +361,69 @@ class _HomeScreenState extends State<HomeScreen> {
     return Consumer<AuthProvider>(
       builder: (context, auth, _) {
         return Scaffold(
-          backgroundColor: AppColors.scaffoldBackground,
-          body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: [
-                  const SizedBox(height: 24),
-
-                  // ── Avatar ──
-                  Container(
-                    width: 88,
-                    height: 88,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.person_rounded,
-                      size: 44,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // ── Name ──
-                  Text(
-                    auth.hoTen ?? 'Người dùng',
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-
-                  // ── Role badge ──
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      auth.tenVaiTro ?? 'N/A',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
+          body: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+              ),
+            ),
+            child: SafeArea(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-
-                  // ── Menu Items ──
-                  _buildMenuItem(
-                    icon: Icons.lock_outline_rounded,
-                    title: 'Đổi mật khẩu',
-                    onTap: () {
-                      // TODO: Navigate to change password screen
-                    },
-                  ),
-                  const SizedBox(height: 8),
-                  _buildMenuItem(
-                    icon: Icons.info_outline_rounded,
-                    title: 'Thông tin ứng dụng',
-                    onTap: () {
-                      // TODO: Show about dialog
-                    },
-                  ),
-                  const SizedBox(height: 24),
-
-                  // ── Logout Button ──
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: OutlinedButton.icon(
-                      onPressed: () => _handleLogout(),
-                      icon: const Icon(
-                        Icons.logout_rounded,
-                        color: AppColors.error,
-                        size: 20,
-                      ),
-                      label: const Text(
-                        'Đăng xuất',
-                        style: TextStyle(
-                          color: AppColors.error,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(
-                          color: AppColors.error.withValues(alpha: 0.3),
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Center(
+                          child: Container(
+                            constraints: const BoxConstraints(maxWidth: 450),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.3),
+                                  blurRadius: 60,
+                                  offset: const Offset(0, 20),
+                                ),
+                              ],
+                            ),
+                            child: IntrinsicHeight(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  _buildProfileInfoBox(auth),
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(30, 20, 30, 0),
+                                    child: Column(
+                                      children: [
+                                        _buildMenuItem(Icons.person_outline, 'Hồ sơ cá nhân', () {}),
+                                        _buildMenuItem(Icons.lock_outline, 'Đổi mật khẩu', () {}),
+                                        _buildManageMenu(context),
+                                        _buildMenuItem(Icons.chat_bubble_outline, 'Góp ý', () {}),
+                                      ],
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(30, 20, 30, 30),
+                                    child: _buildLogoutButton(),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  );
+                },
               ),
             ),
           ),
@@ -473,40 +432,251 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildMenuItem({
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(14),
+  Widget _buildProfileInfoBox(AuthProvider auth) {
+    final name = auth.hoTen?.isNotEmpty == true ? auth.hoTen! : 'Người dùng';
+    final nameEncoded = Uri.encodeComponent(name);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 25),
+      decoration: const BoxDecoration(
+        color: Color(0xFFF8F9FA),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(
+          color: const Color(0xFF6077FC),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF6077FC).withValues(alpha: 0.12),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+                color: Colors.white,
+                image: DecorationImage(
+                  image: NetworkImage('https://ui-avatars.com/api/?name=$nameEncoded&background=667eea&color=fff&size=200'),
+                ),
+              ),
+            ),
+            const SizedBox(width: 15),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    auth.maNguoiDung ?? '0123 456 789',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.9),
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuItem(IconData icon, String title, VoidCallback onTap) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFEEEEEE)),
+          ),
           child: Row(
             children: [
-              Icon(icon, size: 22, color: AppColors.textSecondary),
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0F0F0),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: const Color(0xFF667EEA), size: 20),
+              ),
               const SizedBox(width: 14),
               Expanded(
                 child: Text(
                   title,
                   style: const TextStyle(
+                    color: Color(0xFF444444),
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textPrimary,
                   ),
                 ),
               ),
-              const Icon(
-                Icons.chevron_right_rounded,
-                size: 22,
-                color: AppColors.textHint,
+              const Icon(Icons.chevron_right_rounded, color: Color(0xFF999999), size: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildManageMenu(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFEEEEEE)),
+          ),
+          child: ExpansionTile(
+            tilePadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 2),
+            leading: Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF0F0F0),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.folder_outlined, color: Color(0xFF667EEA), size: 20),
+            ),
+            title: const Text(
+              'Quản lý',
+              style: TextStyle(
+                color: Color(0xFF444444),
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            iconColor: const Color(0xFF999999),
+            collapsedIconColor: const Color(0xFF999999),
+            childrenPadding: const EdgeInsets.only(bottom: 8),
+            children: [
+              _buildSubMenuItem(Icons.notifications_outlined, 'Thông báo'),
+              _buildSubMenuItem(Icons.people_outline, 'Người dùng'),
+              _buildSubMenuItem(Icons.devices_outlined, 'Thiết bị'),
+              _buildSubMenuItem(Icons.description_outlined, 'Hợp đồng'),
+              _buildSubMenuItem(Icons.article_outlined, 'Điều khoản'),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubMenuItem(IconData icon, String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 18, right: 18, bottom: 6),
+      child: InkWell(
+        onTap: () {},
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFBFBFE),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE4E7FF)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8ECFF),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: const Color(0xFF6077FC), size: 18),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    color: Color(0xFF444444),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogoutButton() {
+    return InkWell(
+      onTap: _handleLogout,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFFF6B6B), Color(0xFFEE5A5A)],
+          ),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFFF6B6B).withValues(alpha: 0.35),
+              blurRadius: 20,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.logout_rounded, color: Colors.white, size: 20),
+            ),
+            const SizedBox(width: 14),
+            const Expanded(
+              child: Text(
+                'Đăng xuất',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: Colors.white, size: 20),
+          ],
         ),
       ),
     );

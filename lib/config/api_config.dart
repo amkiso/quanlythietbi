@@ -1,9 +1,10 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 /// Cấu hình API Server
 class ApiConfig {
   // ===== Base URL =====
-  // Android Emulator: 10.0.2.2 là alias cho localhost của máy host
-  // Thiết bị thật: thay bằng IP thực của máy chạy server
-  static const String baseUrl = 'https://lg42grrn.asse.devtunnels.ms:8080/api';
+  // Sử dụng biến môi trường từ file .env để bảo mật thông tin
+  static String get baseUrl => dotenv.env['API_BASE_URL'] ?? 'http://10.0.2.2:8080/api';
 
   // ===== Timeout =====
   static const int connectTimeout = 5000; // 5 giây
