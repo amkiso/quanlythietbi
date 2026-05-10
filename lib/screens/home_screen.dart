@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/app_theme.dart';
 import '../providers/auth_provider.dart';
+import '../providers/cart_provider.dart';
 import '../widgets/admin_bottom_nav_bar.dart';
 import '../widgets/app_confirm_dialog.dart';
 import 'placeholder_page.dart';
 import 'admin_dashboard_page.dart';
+import 'admin_danh_muc_page.dart';
+import 'client_home_page.dart';
+import 'client_cart_page.dart';
+import 'client_profile_page.dart';
 
 /// ═══════════════════════════════════════════════════════
 ///  HomeScreen — Bottom Navigation theo vai trò (VaiTroID)
@@ -27,6 +32,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
+  final GlobalKey<ClientHomePageState> _clientHomeKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +64,13 @@ class _HomeScreenState extends State<HomeScreen> {
         child: BottomNavigationBar(
           currentIndex: _currentIndex,
           onTap: (index) {
+            if (index == _currentIndex && index == 0 && tenVaiTro == 'Khách hàng') {
+              _clientHomeKey.currentState?.resetState();
+            }
+            // Reload giỏ hàng khi chuyển sang tab Giỏ hàng
+            if (index == 1 && tenVaiTro == 'Khách hàng') {
+              context.read<CartProvider>().loadCart();
+            }
             setState(() => _currentIndex = index);
           },
           type: BottomNavigationBarType.fixed,
@@ -88,10 +101,7 @@ class _HomeScreenState extends State<HomeScreen> {
   /// Danh sách các trang cho Admin
   List<Widget> get _adminPages => [
         const AdminDashboardPage(),
-        const PlaceholderPage(
-          title: 'Danh mục thiết bị',
-          icon: Icons.grid_view_rounded,
-        ),
+      const AdminDanhMucPage(),
         const PlaceholderPage(
           title: 'Quét QR',
           icon: Icons.qr_code_scanner_rounded,
@@ -127,51 +137,50 @@ class _HomeScreenState extends State<HomeScreen> {
     switch (tenVaiTro) {
       case 'Khách hàng':
         return _NavConfig(
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_rounded),
+          items: [
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined),
               activeIcon: Icon(Icons.home_rounded),
               label: 'Trang chủ',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.category_outlined),
-              activeIcon: Icon(Icons.category_rounded),
-              label: 'Danh mục',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.shopping_cart_outlined),
-              activeIcon: Icon(Icons.shopping_cart_rounded),
+              icon: Consumer<CartProvider>(
+                builder: (_, cart, child) => Badge(
+                  isLabelVisible: cart.totalQuantity > 0,
+                  label: Text('${cart.totalQuantity}',
+                      style: const TextStyle(fontSize: 10, color: Colors.white)),
+                  backgroundColor: AppColors.error,
+                  child: child!,
+                ),
+                child: const Icon(Icons.shopping_bag_outlined),
+              ),
+              activeIcon: Consumer<CartProvider>(
+                builder: (_, cart, child) => Badge(
+                  isLabelVisible: cart.totalQuantity > 0,
+                  label: Text('${cart.totalQuantity}',
+                      style: const TextStyle(fontSize: 10, color: Colors.white)),
+                  backgroundColor: AppColors.error,
+                  child: child!,
+                ),
+                child: const Icon(Icons.shopping_bag_rounded),
+              ),
               label: 'Giỏ hàng',
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.description_outlined),
-              activeIcon: Icon(Icons.description_rounded),
-              label: 'Hợp đồng',
-            ),
-            BottomNavigationBarItem(
+            const BottomNavigationBarItem(
               icon: Icon(Icons.person_outline_rounded),
               activeIcon: Icon(Icons.person_rounded),
-              label: 'Cá nhân',
+              label: 'Hồ sơ',
             ),
           ],
           pages: [
-            const PlaceholderPage(
-              title: 'Trang chủ',
-              icon: Icons.home_rounded,
+            ClientHomePage(
+              key: _clientHomeKey,
+              onNavigateToProfile: () {
+                setState(() => _currentIndex = 2);
+              },
             ),
-            const PlaceholderPage(
-              title: 'Danh mục thiết bị',
-              icon: Icons.category_rounded,
-            ),
-            const PlaceholderPage(
-              title: 'Giỏ hàng',
-              icon: Icons.shopping_cart_rounded,
-            ),
-            const PlaceholderPage(
-              title: 'Hợp đồng của tôi',
-              icon: Icons.description_rounded,
-            ),
-            _buildProfilePage(),
+            const ClientCartPage(isEmbedded: true),
+            const ClientProfilePage(),
           ],
         );
 
@@ -366,7 +375,7 @@ class _HomeScreenState extends State<HomeScreen> {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                colors: [Color(0xFF1F2937), Color(0xFF374151)],
               ),
             ),
             child: SafeArea(
@@ -447,7 +456,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Container(
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
-          color: const Color(0xFF6077FC),
+          color: const Color(0xFF4A6CF7),
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -467,7 +476,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 border: Border.all(color: Colors.white, width: 2),
                 color: Colors.white,
                 image: DecorationImage(
-                  image: NetworkImage('https://ui-avatars.com/api/?name=$nameEncoded&background=667eea&color=fff&size=200'),
+                  image: NetworkImage('https://ui-avatars.com/api/?name=$nameEncoded&background=4A6CF7&color=fff&size=200'),
                 ),
               ),
             ),
@@ -523,7 +532,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: const Color(0xFFF0F0F0),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(icon, color: const Color(0xFF667EEA), size: 20),
+                child: Icon(icon, color: const Color(0xFF4A6CF7), size: 20),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -564,7 +573,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: const Color(0xFFF0F0F0),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.folder_outlined, color: Color(0xFF667EEA), size: 20),
+              child: const Icon(Icons.folder_outlined, color: Color(0xFF4A6CF7), size: 20),
             ),
             title: const Text(
               'Quản lý',
@@ -601,7 +610,7 @@ class _HomeScreenState extends State<HomeScreen> {
           decoration: BoxDecoration(
             color: const Color(0xFFFBFBFE),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE4E7FF)),
+            border: Border.all(color: const Color(0xFFE8ECFF)),
           ),
           child: Row(
             children: [
@@ -612,7 +621,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: const Color(0xFFE8ECFF),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(icon, color: const Color(0xFF6077FC), size: 18),
+                child: Icon(icon, color: const Color(0xFF4A6CF7), size: 18),
               ),
               const SizedBox(width: 14),
               Expanded(

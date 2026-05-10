@@ -15,4 +15,11 @@ class ApiConfig {
   static const String doiMatKhauEndpoint = '/auth/doi-mat-khau';
   static const String thietBiEndpoint = '/thiet-bi';
   static const String dashboardEndpoint = '/dashboard';
+  static const String imagesEndpoint = '/images';
+  static const String danhMucEndpoint = '/danh-muc';
+  static const String loaiThietBiEndpoint = '/loai-thiet-bi';
+  static const String nhaCungCapEndpoint = '/nha-cung-cap';
+  static const String thongBaoEndpoint = '/thong-bao';
+  static const String gioHangEndpoint = '/gio-hang';
+  static const String hopDongEndpoint = '/hop-dong';
 }

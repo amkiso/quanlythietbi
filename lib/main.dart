@@ -4,7 +4,10 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'config/app_theme.dart';
 import 'providers/auth_provider.dart';
 import 'providers/dashboard_provider.dart';
+import 'providers/image_provider.dart' as app_img;
 import 'providers/thiet_bi_provider.dart';
+import 'providers/danh_muc_provider.dart';
+import 'providers/cart_provider.dart';
 import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
@@ -24,7 +27,10 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => DashboardProvider()),
+        ChangeNotifierProvider(create: (_) => app_img.ImageProvider()),
         ChangeNotifierProvider(create: (_) => ThietBiProvider()),
+        ChangeNotifierProvider(create: (_) => DanhMucProvider()),
+        ChangeNotifierProvider(create: (_) => CartProvider()),
       ],
       child: MaterialApp(
         title: 'Xypher - Quản Lý Thiết Bị',

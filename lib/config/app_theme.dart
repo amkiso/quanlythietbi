@@ -2,58 +2,70 @@ import 'package:flutter/material.dart';
 
 /// ===== BẢNG MÀU XYPHER BRAND =====
 /// Palette mới cho giao diện Xypher (Splash & Login)
+/// Đồng bộ với bảng màu Grey / Blue / Red
 class XypherColors {
   XypherColors._();
 
-  static const Color background = Color(0xFFFFFFFF);
-  static const Color primary = Color(0xFF4A60E6);
-  static const Color buttonColor = Color(0xFF5A5C69);
-  static const Color textSecondary = Color(0xFFA0A0A0);
-  static const Color inputBorder = Color(0xFFE0E0E0);
-  static const Color textDark = Color(0xFF5A5C69);
+  static const Color background = Color(0xFFF5F5F5);
+  static const Color primary = Color(0xFF4A6CF7);
+  static const Color buttonColor = Color(0xFF374151);
+  static const Color textSecondary = Color(0xFF9CA3AF);
+  static const Color inputBorder = Color(0xFFD1D5DB);
+  static const Color textDark = Color(0xFF374151);
 }
 
 /// ===== BẢNG MÀU CHÍNH CỦA APP =====
-/// Thay đổi tại đây để thay đổi toàn bộ màu sắc app
+/// Bảng màu Grey / Blue / Red — đồng bộ toàn bộ giao diện
 class AppColors {
   AppColors._();
 
-  // Primary
-  static const Color primary = Color(0xFF6750A4);
-  static const Color primaryLight = Color(0xFF9A82DB);
-  static const Color primaryDark = Color(0xFF381E72);
+  // ── Primary (Blue) ──
+  static const Color primary = Color(0xFF4A6CF7);
+  static const Color primaryLight = Color(0xFF93A8FC);
+  static const Color primaryDark = Color(0xFF2E3A8C);
+  static const Color primarySurface = Color(0xFFE8ECFF);
   static const Color onPrimary = Colors.white;
 
-  // Secondary
-  static const Color secondary = Color(0xFF625B71);
-  static const Color secondaryLight = Color(0xFF958DA5);
+  // ── Secondary (Grey) ──
+  static const Color secondary = Color(0xFF6B7280);
+  static const Color secondaryLight = Color(0xFF9CA3AF);
   static const Color onSecondary = Colors.white;
 
-  // Background & Surface
-  static const Color background = Color(0xFFF7F2FA);
+  // ── Background & Surface (Grey) ──
+  static const Color background = Color(0xFFF5F5F5);
   static const Color surface = Colors.white;
-  static const Color surfaceVariant = Color(0xFFE7E0EC);
-  static const Color scaffoldBackground = Color(0xFFF5F5F5);
+  static const Color surfaceVariant = Color(0xFFF3F4F6);
+  static const Color scaffoldBackground = Color(0xFFF7F8FC);
 
-  // Status
-  static const Color success = Color(0xFF2E7D32);
-  static const Color successLight = Color(0xFFE8F5E9);
-  static const Color error = Color(0xFFB3261E);
-  static const Color errorLight = Color(0xFFFCE4EC);
-  static const Color warning = Color(0xFFF57C00);
-  static const Color warningLight = Color(0xFFFFF3E0);
-  static const Color info = Color(0xFF0288D1);
-  static const Color infoLight = Color(0xFFE1F5FE);
+  // ── Status ──
+  static const Color success = Color(0xFF059669);
+  static const Color successLight = Color(0xFFD1FAE5);
+  static const Color error = Color(0xFFE53E3E);
+  static const Color errorLight = Color(0xFFFEE2E2);
+  static const Color warning = Color(0xFFF59E0B);
+  static const Color warningLight = Color(0xFFFEF3C7);
+  static const Color info = Color(0xFF3B82F6);
+  static const Color infoLight = Color(0xFFDBEAFE);
 
-  // Text
-  static const Color textPrimary = Color(0xFF1C1B1F);
-  static const Color textSecondary = Color(0xFF49454F);
-  static const Color textHint = Color(0xFF79747E);
-  static const Color textDisabled = Color(0xFFCAC4D0);
+  // ── Text (Grey scale) ──
+  static const Color textPrimary = Color(0xFF1F2937);
+  static const Color textSecondary = Color(0xFF6B7280);
+  static const Color textHint = Color(0xFF9CA3AF);
+  static const Color textDisabled = Color(0xFFD1D5DB);
 
-  // Divider & Border
-  static const Color divider = Color(0xFFE0E0E0);
-  static const Color border = Color(0xFFCAC4D0);
+  // ── Divider & Border (Grey) ──
+  static const Color divider = Color(0xFFE5E7EB);
+  static const Color border = Color(0xFFD1D5DB);
+
+  // ── Dark theme accent ──
+  static const Color darkBg = Color(0xFF1F2937);
+  static const Color darkCard = Color(0xFF374151);
+
+  // ── Thiết bị trạng thái ──
+  static const Color statusAvailable = Color(0xFF059669);
+  static const Color statusRented = Color(0xFF3B82F6);
+  static const Color statusMaintenance = Color(0xFFF59E0B);
+  static const Color statusBroken = Color(0xFFE53E3E);
 }
 
 /// ===== KÍCH THƯỚC CHUẨN =====
@@ -169,7 +181,7 @@ class AppTextStyles {
 class AppTheme {
   AppTheme._();
 
-  /// Light Theme
+  /// Light Theme — Grey / Blue / Red palette
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
@@ -305,7 +317,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppDimens.radiusSM),
         ),
-        backgroundColor: AppColors.textPrimary,
+        backgroundColor: AppColors.darkBg,
         contentTextStyle: const TextStyle(color: Colors.white),
       ),
 

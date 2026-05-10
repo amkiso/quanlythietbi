@@ -23,6 +23,7 @@ class AuthProvider extends ChangeNotifier {
   String? get hoTen => _loginResponse?.hoTen;
   String? get tenVaiTro => _loginResponse?.tenVaiTro;
   int? get nguoiDungId => _loginResponse?.nguoiDungId;
+  String? get maNguoiDung => _loginResponse?.maNguoiDung;
   int? get vaiTroId => _loginResponse?.vaiTroId;
   int? get khoId => _loginResponse?.khoId;
   bool get doiMatKhauLanDau => _loginResponse?.doiMatKhauLanDau ?? false;

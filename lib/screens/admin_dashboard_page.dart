@@ -24,7 +24,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   int _currentReminder = 0;
 
   // Màu sắc dashboard
-  static const Color _darkBg = Color(0xFF2D2F3E);
+  static const Color _darkBg = Color(0xFF1F2937);
   static const Color _accentBlue = Color(0xFF4A6CF7);
   static const Color _accentRed = Color(0xFFE85D5D);
   static const Color _accentAmber = Color(0xFFF5A623);

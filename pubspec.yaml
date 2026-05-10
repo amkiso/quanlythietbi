@@ -53,6 +53,9 @@ dependencies:
   # Environment variables for security
   flutter_dotenv: ^5.2.1
 
+  # Image caching — tải ảnh 1 lần, cache cục bộ, tự retry khi lỗi
+  cached_network_image: ^3.4.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
