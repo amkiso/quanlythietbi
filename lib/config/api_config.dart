@@ -22,4 +22,6 @@ class ApiConfig {
   static const String thongBaoEndpoint = '/thong-bao';
   static const String gioHangEndpoint = '/gio-hang';
   static const String hopDongEndpoint = '/hop-dong';
+  static const String diaChiEndpoint = '/dia-chi';
+  static const String dieuKhoanMauEndpoint = '/dieu-khoan-mau';
 }

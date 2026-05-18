@@ -34,7 +34,7 @@ class ImageService {
 
   /// Lấy SAS URL upload có thời hạn 5 phút từ server.
   /// [category]: Loại container (user, products, work)
-  /// [extension]: Định dạng file (mặc định: jpg)
+  /// [extension]: Định dạng file (mặc định: png)
   Future<ApiResponse<SasUploadData>> getUploadUrl({
     required ImageCategory category,
     String extension = 'png',
@@ -68,7 +68,7 @@ class ImageService {
   Future<void> uploadToAzure({
     required String sasUrl,
     required Uint8List fileBytes,
-    String contentType = 'image/jpeg',
+    String contentType = 'image/png',
     void Function(double progress)? onProgress,
   }) async {
     // Dio instance riêng — không có JWT interceptor, không có baseUrl

@@ -56,6 +56,9 @@ dependencies:
   # Image caching — tải ảnh 1 lần, cache cục bộ, tự retry khi lỗi
   cached_network_image: ^3.4.1
 
+  # Signature pad — Ký tên điện tử trên hợp đồng
+  signature: ^5.4.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
