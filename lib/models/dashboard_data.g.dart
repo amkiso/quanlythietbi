@@ -29,11 +29,11 @@ Map<String, dynamic> _$DashboardDataToJson(DashboardData instance) =>
     };
 
 NhacNhoItem _$NhacNhoItemFromJson(Map<String, dynamic> json) => NhacNhoItem(
-      loai: json['loai'] as String,
-      tieuDe: json['tieuDe'] as String,
-      moTa: json['moTa'] as String,
-      referenceId: (json['referenceId'] as num?)?.toInt(),
-    );
+  loai: json['loai'] as String,
+  tieuDe: json['tieuDe'] as String,
+  moTa: json['moTa'] as String,
+  referenceId: (json['referenceId'] as num?)?.toInt(),
+);
 
 Map<String, dynamic> _$NhacNhoItemToJson(NhacNhoItem instance) =>
     <String, dynamic>{

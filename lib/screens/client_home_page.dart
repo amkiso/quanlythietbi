@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -7,8 +8,12 @@ import '../models/loai_thiet_bi.dart';
 import '../providers/auth_provider.dart';
 import '../providers/cart_provider.dart';
 import '../services/danh_muc_service.dart';
+import '../services/checkout_service.dart';
 import '../widgets/azure_image.dart';
 import 'client_device_detail_page.dart';
+import 'client_notification_page.dart';
+import 'client_order_history_page.dart';
+import 'contract_view_screen.dart';
 
 /// CLIENT HOME PAGE — Trang chủ dành cho Khách hàng
 class ClientHomePage extends StatefulWidget {
@@ -21,6 +26,7 @@ class ClientHomePage extends StatefulWidget {
 
 class ClientHomePageState extends State<ClientHomePage> {
   final DanhMucService _danhMucService = DanhMucService();
+  final CheckoutService _checkoutService = CheckoutService();
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocus = FocusNode();
   final NumberFormat _currencyFormat = NumberFormat('#,###', 'vi_VN');
@@ -32,6 +38,14 @@ class ClientHomePageState extends State<ClientHomePage> {
   List<LoaiThietBi> _hotLoaiThietBi = [];
   List<LoaiThietBi> _searchSuggestions = [];
 
+  // Dynamic contract card
+  List<Map<String, dynamic>> _recentContracts = [];
+  int _currentContractIndex = 0;
+  Timer? _contractTimer;
+
+  // Notification count
+  int _notificationCount = 0;
+
   bool _isLoading = true;
   int? _selectedDanhMucId;
   String _searchQuery = '';
@@ -41,11 +55,14 @@ class ClientHomePageState extends State<ClientHomePage> {
   void initState() {
     super.initState();
     _loadData();
+    _loadRecentContracts();
+    _loadNotificationCount();
     _searchFocus.addListener(_onFocusChanged);
   }
 
   @override
   void dispose() {
+    _contractTimer?.cancel();
     _removeOverlay();
     _searchController.dispose();
     _searchFocus.removeListener(_onFocusChanged);
@@ -63,6 +80,8 @@ class ClientHomePageState extends State<ClientHomePage> {
       _filteredLoaiThietBi = _allLoaiThietBi;
       _searchSuggestions = [];
     });
+    _loadRecentContracts();
+    _loadNotificationCount();
   }
 
   void _onFocusChanged() {
@@ -74,7 +93,9 @@ class ClientHomePageState extends State<ClientHomePage> {
   }
 
   Future<void> _loadData() async {
-    setState(() => _isLoading = true);
+    // Chỉ hiển thị loading spinner lần đầu, pull-to-refresh giữ nguyên UI cũ
+    final isInitialLoad = _allLoaiThietBi.isEmpty;
+    if (isInitialLoad) setState(() => _isLoading = true);
     try {
       await _danhMucService.preloadCaches();
       final danhMucs = await _danhMucService.getAllDanhMuc();
@@ -88,11 +109,65 @@ class ClientHomePageState extends State<ClientHomePage> {
             ..sort((a, b) => b.giaThueThamKhao.compareTo(a.giaThueThamKhao));
           if (_hotLoaiThietBi.length > 4) _hotLoaiThietBi = _hotLoaiThietBi.sublist(0, 4);
           _isLoading = false;
+          _applyFilters();
         });
       }
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _loadRecentContracts() async {
+    try {
+      // Thử endpoint gan-nhat trước, nếu lỗi thì fallback sang cua-toi
+      List<Map<String, dynamic>> data;
+      try {
+        data = await _checkoutService.getRecentContracts(limit: 5);
+      } catch (_) {
+        // Fallback: lấy tất cả rồi cắt 5
+        final all = await _checkoutService.getMyContracts();
+        data = all.length > 5 ? all.sublist(0, 5) : all;
+      }
+      if (mounted && data.isNotEmpty) {
+        setState(() {
+          _recentContracts = data;
+          _currentContractIndex = 0;
+        });
+        _startContractTimer();
+      }
+    } catch (_) { /* silent */ }
+  }
+
+  Future<void> _loadNotificationCount() async {
+    try {
+      final dio = _checkoutService.dio;
+      final response = await dio.get('/thong-bao/chua-doc');
+      final data = response.data;
+      if (data['success'] == true && mounted) {
+        setState(() => _notificationCount = (data['data'] ?? 0) as int);
+      }
+    } catch (_) { /* silent */ }
+  }
+
+  /// Làm mới toàn bộ dữ liệu khi vuốt xuống (pull-to-refresh)
+  Future<void> _refreshAll() async {
+    await Future.wait([
+      _loadData(),
+      _loadRecentContracts(),
+      _loadNotificationCount(),
+    ]);
+  }
+
+  void _startContractTimer() {
+    _contractTimer?.cancel();
+    if (_recentContracts.length <= 1) return;
+    _contractTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (mounted) {
+        setState(() {
+          _currentContractIndex = (_currentContractIndex + 1) % _recentContracts.length;
+        });
+      }
+    });
   }
 
   void _onSearchChanged(String query) {
@@ -237,7 +312,7 @@ class ClientHomePageState extends State<ClientHomePage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
           : RefreshIndicator(
-              onRefresh: _loadData,
+              onRefresh: _refreshAll,
               color: AppColors.primary,
               child: CustomScrollView(
                 physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
@@ -301,13 +376,29 @@ class ClientHomePageState extends State<ClientHomePage> {
               ),
               const SizedBox(width: 12),
               // Notification bell
-              Container(
-                width: 42, height: 42,
-                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), shape: BoxShape.circle),
-                child: Stack(alignment: Alignment.center, children: [
-                  const Icon(Icons.notifications_outlined, color: Colors.white, size: 24),
-                  Positioned(top: 8, right: 8, child: Container(width: 10, height: 10, decoration: BoxDecoration(color: Colors.redAccent, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 1.5)))),
-                ]),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const ClientNotificationPage()));
+                },
+                child: Container(
+                  width: 42, height: 42,
+                  decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), shape: BoxShape.circle),
+                  child: Stack(alignment: Alignment.center, children: [
+                    const Icon(Icons.notifications_outlined, color: Colors.white, size: 24),
+                    if (_notificationCount > 0)
+                      Positioned(
+                        top: 6, right: 6,
+                        child: Container(
+                          padding: const EdgeInsets.all(3),
+                          decoration: BoxDecoration(color: Colors.redAccent, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 1.5)),
+                          child: Text(
+                            _notificationCount > 9 ? '9+' : '$_notificationCount',
+                            style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                  ]),
+                ),
               ),
               const SizedBox(width: 8),
               // Avatar → navigate to profile
@@ -318,7 +409,11 @@ class ClientHomePageState extends State<ClientHomePage> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(color: Colors.white, width: 2),
-                    image: DecorationImage(image: NetworkImage('https://ui-avatars.com/api/?name=$nameEncoded&background=4A6CF7&color=fff&size=200'), fit: BoxFit.cover),
+                  ),
+                  child: ClipOval(
+                    child: (auth.avt != null && auth.avt!.trim().isNotEmpty)
+                        ? AzureImage(imageUrl: Uri.encodeFull(auth.avt!.trim()), width: 42, height: 42, fit: BoxFit.cover)
+                        : Image.network('https://ui-avatars.com/api/?name=$nameEncoded&background=4A6CF7&color=fff&size=200', fit: BoxFit.cover),
                   ),
                 ),
               ),
@@ -329,54 +424,232 @@ class ClientHomePageState extends State<ClientHomePage> {
     );
   }
 
-  // ── HỢP ĐỒNG ──
+  // ── HỢP ĐỒNG (DYNAMIC) ──
+  // Sử dụng trangThaiId (numeric) để ánh xạ màu chính xác theo API:
+  //  1: Chờ ký kết   | 2: Chờ thanh toán  | 3: Chờ phê duyệt
+  //  4: Chờ giao hàng| 5: Đang cho thuê   | 6: Quá hạn
+  //  7: Vi phạm      | 8: Đã trả TB       | 9: Hoàn tất
+  // 10: Đã hủy
+  Gradient _getContractGradient(int statusId) {
+    Color color1;
+    Color color2;
+    switch (statusId) {
+      case 1: // Chờ ký kết — Amber đậm
+        color1 = const Color(0xFFB85C00);
+        color2 = const Color(0xFFD4790A);
+        break;
+      case 2: // Chờ thanh toán — Teal đậm
+        color1 = const Color(0xFF2A7A7D);
+        color2 = const Color(0xFF358E8F);
+        break;
+      case 3: // Chờ phê duyệt — Indigo xám
+        color1 = const Color(0xFF37526B);
+        color2 = const Color(0xFF476882);
+        break;
+      case 4: // Chờ giao hàng — Blue đậm
+        color1 = const Color(0xFF1565C0);
+        color2 = const Color(0xFF1E7BD6);
+        break;
+      case 5: // Đang cho thuê — Teal xanh đậm
+        color1 = const Color(0xFF0D7362);
+        color2 = const Color(0xFF148F7A);
+        break;
+      case 6: // Quá hạn — Cam đỏ đậm
+        color1 = const Color(0xFFC63F17);
+        color2 = const Color(0xFFD95228);
+        break;
+      case 7: // Vi phạm — Đỏ đậm
+        color1 = const Color(0xFFAD1F1F);
+        color2 = const Color(0xFFC62828);
+        break;
+      case 8: // Đã trả TB — Xám xanh
+        color1 = const Color(0xFF455A64);
+        color2 = const Color(0xFF546E7A);
+        break;
+      case 9: // Hoàn tất — Xanh lá đậm
+        color1 = const Color(0xFF2E7D32);
+        color2 = const Color(0xFF3A9140);
+        break;
+      case 10: // Đã hủy — Xám trung tính
+        color1 = const Color(0xFF5C5C5C);
+        color2 = const Color(0xFF6E6E6E);
+        break;
+      default:
+        color1 = const Color(0xFF3D50C4);
+        color2 = const Color(0xFF4E63D9);
+        break;
+    }
+    return LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [color1, color2],
+    );
+  }
+
+  Color _getContractShadowColor(int statusId) {
+    switch (statusId) {
+      case 1: return const Color(0xFFB85C00);
+      case 2: return const Color(0xFF2A7A7D);
+      case 3: return const Color(0xFF37526B);
+      case 4: return const Color(0xFF1565C0);
+      case 5: return const Color(0xFF0D7362);
+      case 6: return const Color(0xFFC63F17);
+      case 7: return const Color(0xFFAD1F1F);
+      case 8: return const Color(0xFF455A64);
+      case 9: return const Color(0xFF2E7D32);
+      case 10: return const Color(0xFF5C5C5C);
+      default: return const Color(0xFF3D50C4);
+    }
+  }
+
   Widget _buildContractCard() {
+    if (_recentContracts.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF5B72F0), Color(0xFF7B8FF7)]),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [BoxShadow(color: const Color(0xFF5B72F0).withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))],
+          ),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('HỢP ĐỒNG', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 11, fontWeight: FontWeight.w500, letterSpacing: 0.5)),
+            const SizedBox(height: 8),
+            const Text('Chưa có hợp đồng nào', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 4),
+            Text('Hãy thuê thiết bị để tạo hợp đồng đầu tiên!', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
+          ]),
+        ),
+      );
+    }
+
+    final contract = _recentContracts[_currentContractIndex];
+    final maHD = contract['maHopDong'] ?? '';
+    final trangThai = contract['trangThai'] ?? '';
+    final trangThaiId = (contract['trangThaiId'] ?? 0) as int;
+    final tongTien = (contract['tongTienThue'] ?? 0).toDouble();
+    final soTB = contract['soThietBi'] ?? 0;
+    final ngayDuKienTra = contract['ngayDuKienTra'] != null ? DateTime.tryParse(contract['ngayDuKienTra'].toString()) : null;
+    final hopDongId = contract['hopDongId'] as int?;
+
+    String hanTraText = '';
+    String conLaiText = '';
+    if (ngayDuKienTra != null) {
+      final df = DateFormat('dd/MM/yyyy');
+      hanTraText = 'Hạn trả: ${df.format(ngayDuKienTra)}';
+      final diff = ngayDuKienTra.difference(DateTime.now()).inDays;
+      conLaiText = diff > 0 ? 'Còn $diff ngày' : (diff == 0 ? 'Hôm nay' : 'Quá hạn ${-diff} ngày');
+    }
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF5B72F0), Color(0xFF7B8FF7)]),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: const Color(0xFF5B72F0).withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))],
+      child: GestureDetector(
+        onHorizontalDragEnd: (details) {
+          if (_recentContracts.length <= 1) return;
+          if (details.primaryVelocity != null) {
+            if (details.primaryVelocity! < 0) {
+              // Swipe left -> next
+              setState(() {
+                _currentContractIndex = (_currentContractIndex + 1) % _recentContracts.length;
+              });
+              _startContractTimer(); // reset timer
+            } else if (details.primaryVelocity! > 0) {
+              // Swipe right -> previous
+              setState(() {
+                _currentContractIndex = (_currentContractIndex - 1 + _recentContracts.length) % _recentContracts.length;
+              });
+              _startContractTimer(); // reset timer
+            }
+          }
+        },
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 500),
+          child: Container(
+            key: ValueKey(maHD),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: _getContractGradient(trangThaiId),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: _getContractShadowColor(trangThaiId).withValues(alpha: 0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                )
+              ],
+            ),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('MÃ HỢP ĐỒNG', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 11, fontWeight: FontWeight.w500, letterSpacing: 0.5)),
+                const SizedBox(height: 4),
+                Text(maHD, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+              ])),
+              if (_recentContracts.length > 1)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(12)),
+                  child: Text('${_currentContractIndex + 1}/${_recentContracts.length}', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600)),
+                ),
+            ]),
+            const SizedBox(height: 10),
+            Row(children: [
+              Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(6)), child: Text(trangThai, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600))),
+              const Spacer(),
+              Text('$soTB SP', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
+            ]),
+            const SizedBox(height: 8),
+            Row(children: [
+              if (hanTraText.isNotEmpty) ...[
+                Icon(Icons.event_rounded, color: Colors.white.withValues(alpha: 0.7), size: 14),
+                const SizedBox(width: 4),
+                Text(hanTraText, style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12)),
+              ],
+              const Spacer(),
+              if (conLaiText.isNotEmpty) Text(conLaiText, style: TextStyle(color: Colors.amber.shade300, fontSize: 12, fontWeight: FontWeight.w600)),
+            ]),
+            const SizedBox(height: 4),
+            Row(children: [
+              Text('Tổng tiền thuê', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
+              const Spacer(),
+              Text('${_currencyFormat.format(tongTien)} đ', style: TextStyle(color: Colors.amber.shade300, fontSize: 14, fontWeight: FontWeight.bold)),
+            ]),
+            const SizedBox(height: 12),
+            Row(children: [
+              _buildContractBtn('Xem chi tiết', outlined: true, onTap: () {
+                if (hopDongId != null) Navigator.push(context, MaterialPageRoute(builder: (_) => ContractViewScreen(hopDongId: hopDongId)));
+              }),
+              const SizedBox(width: 8),
+              _buildContractBtn('Lịch sử đơn', outlined: false, onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const ClientOrderHistoryPage()));
+              }),
+            ]),
+            // Dots indicator
+            if (_recentContracts.length > 1) ...[
+              const SizedBox(height: 10),
+              Row(mainAxisAlignment: MainAxisAlignment.center, children: List.generate(_recentContracts.length, (i) {
+                return Container(
+                  width: i == _currentContractIndex ? 16 : 6, height: 6,
+                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                  decoration: BoxDecoration(color: Colors.white.withValues(alpha: i == _currentContractIndex ? 0.9 : 0.3), borderRadius: BorderRadius.circular(3)),
+                );
+              })),
+            ],
+          ]),
         ),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('MÃ HỢP ĐỒNG', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 11, fontWeight: FontWeight.w500, letterSpacing: 0.5)),
-          const SizedBox(height: 4),
-          const Text('HD-YT-2401', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 10),
-          Row(children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.amber.shade300, size: 16),
-            const SizedBox(width: 6),
-            Text('Thanh toán trước 01/06/2026', style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12)),
-            const Spacer(),
-            Text('Còn 3 ngày', style: TextStyle(color: Colors.amber.shade300, fontSize: 12, fontWeight: FontWeight.w600)),
-            const SizedBox(width: 4),
-            Text('6 SP', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
-          ]),
-          const SizedBox(height: 8),
-          Row(children: [
-            Text('Cuối tháng thứ 4', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
-            const Spacer(),
-            Text('4.800.000 đ', style: TextStyle(color: Colors.amber.shade300, fontSize: 14, fontWeight: FontWeight.bold)),
-          ]),
-          const SizedBox(height: 12),
-          Row(children: [
-            _buildContractBtn('Xem chi tiết đơn hàng', outlined: true),
-            const SizedBox(width: 8),
-            _buildContractBtn('Gia hạn', outlined: false),
-          ]),
-        ]),
+      ),
       ),
     );
   }
 
-  Widget _buildContractBtn(String text, {required bool outlined}) {
+  Widget _buildContractBtn(String text, {required bool outlined, VoidCallback? onTap}) {
     return Expanded(
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {},
+          onTap: onTap,
           borderRadius: BorderRadius.circular(8),
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 10),

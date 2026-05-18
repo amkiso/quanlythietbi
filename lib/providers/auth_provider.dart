@@ -22,6 +22,7 @@ class AuthProvider extends ChangeNotifier {
   String? get token => _loginResponse?.token;
   String? get hoTen => _loginResponse?.hoTen;
   String? get tenVaiTro => _loginResponse?.tenVaiTro;
+  String? get avt => _loginResponse?.avt;
   int? get nguoiDungId => _loginResponse?.nguoiDungId;
   String? get maNguoiDung => _loginResponse?.maNguoiDung;
   int? get vaiTroId => _loginResponse?.vaiTroId;
@@ -43,6 +44,7 @@ class AuthProvider extends ChangeNotifier {
         tenVaiTro: userInfo['tenVaiTro'] ?? '',
         khoId: userInfo['khoId'],
         doiMatKhauLanDau: userInfo['doiMatKhauLanDau'] ?? false,
+        avt: userInfo['avt'],
       );
       notifyListeners();
     }
@@ -72,6 +74,7 @@ class AuthProvider extends ChangeNotifier {
           tenVaiTro: _loginResponse!.tenVaiTro,
           khoId: _loginResponse!.khoId,
           doiMatKhauLanDau: _loginResponse!.doiMatKhauLanDau,
+          avt: _loginResponse!.avt,
         );
 
         _isLoading = false;

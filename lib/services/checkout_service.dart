@@ -12,6 +12,9 @@ import 'api_client.dart';
 class CheckoutService {
   final Dio _dio = ApiClient.dioClient;
 
+  /// Expose Dio cho các thành phần khác tái sử dụng (notifications, etc.)
+  Dio get dio => _dio;
+
   // ─────────────────────────────────────────────────────
   //  15. ĐỊA CHỈ GIAO HÀNG
   // ─────────────────────────────────────────────────────
@@ -166,6 +169,73 @@ class CheckoutService {
   }
 
   // ─────────────────────────────────────────────────────
+  //  19. DANH SÁCH & CHI TIẾT HỢP ĐỒNG KHÁCH HÀNG
+  // ─────────────────────────────────────────────────────
+
+  /// 19.1 — Lấy danh sách tất cả hợp đồng của khách hàng
+  Future<List<Map<String, dynamic>>> getMyContracts() async {
+    try {
+      final response = await _dio.get('${ApiConfig.hopDongEndpoint}/cua-toi');
+      final data = response.data;
+      if (data['success'] == true && data['data'] != null) {
+        return List<Map<String, dynamic>>.from(data['data']);
+      }
+      return [];
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// 19.2 — Lấy N hợp đồng gần nhất (cho label trang chủ)
+  Future<List<Map<String, dynamic>>> getRecentContracts({int limit = 5}) async {
+    try {
+      final response = await _dio.get(
+        '${ApiConfig.hopDongEndpoint}/gan-nhat',
+        queryParameters: {'limit': limit},
+      );
+      final data = response.data;
+      if (data['success'] == true && data['data'] != null) {
+        return List<Map<String, dynamic>>.from(data['data']);
+      }
+      return [];
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// 19.3 — Xem chi tiết hợp đồng (xem lại hợp đồng đã tạo)
+  Future<Map<String, dynamic>> getContractDetail(int hopDongId) async {
+    try {
+      final response = await _dio.get(
+        '${ApiConfig.hopDongEndpoint}/$hopDongId/chi-tiet',
+      );
+      final data = response.data;
+      if (data['success'] == true && data['data'] != null) {
+        return data['data'] as Map<String, dynamic>;
+      }
+      throw Exception('Không thể lấy chi tiết hợp đồng');
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// 19.4 — Đếm số đơn hàng theo trạng thái (cho badge hồ sơ)
+  Future<Map<String, dynamic>> getDonHangCount() async {
+    try {
+      final response = await _dio.get(
+        '${ApiConfig.hopDongEndpoint}/don-hang-count',
+      );
+      final data = response.data;
+      if (data['success'] == true && data['data'] != null) {
+        return data['data'] as Map<String, dynamic>;
+      }
+      return {};
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // ─────────────────────────────────────────────────────
   //  HELPER
   // ─────────────────────────────────────────────────────
 
@@ -177,3 +247,4 @@ class CheckoutService {
     return ApiClient.getErrorMessage(e);
   }
 }
+

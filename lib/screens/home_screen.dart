@@ -10,6 +10,7 @@ import 'admin_dashboard_page.dart';
 import 'admin_danh_muc_page.dart';
 import 'client_home_page.dart';
 import 'client_cart_page.dart';
+import '../widgets/azure_image.dart';
 import 'client_profile_page.dart';
 
 /// ═══════════════════════════════════════════════════════
@@ -475,9 +476,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white, width: 2),
                 color: Colors.white,
-                image: DecorationImage(
-                  image: NetworkImage('https://ui-avatars.com/api/?name=$nameEncoded&background=4A6CF7&color=fff&size=200'),
-                ),
+              ),
+              child: ClipOval(
+                child: (auth.avt != null && auth.avt!.isNotEmpty)
+                    ? AzureImage(imageUrl: auth.avt!, width: 50, height: 50, fit: BoxFit.cover)
+                    : Image.network('https://ui-avatars.com/api/?name=$nameEncoded&background=4A6CF7&color=fff&size=200', fit: BoxFit.cover),
               ),
             ),
             const SizedBox(width: 15),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../config/app_theme.dart';
+import 'contract_view_screen.dart';
 
 /// ═══════════════════════════════════════════════════════
 ///  CONTRACT SUCCESS SCREEN — Màn hình gửi hợp đồng thành công
@@ -142,8 +143,14 @@ class ContractSuccessScreen extends StatelessWidget {
                       height: 50,
                       child: ElevatedButton(
                         onPressed: () {
-                          // TODO: Navigate to contract detail screen
+                          // Pop toàn bộ checkout flow về trang chủ, rồi push ContractView
                           Navigator.popUntil(context, (route) => route.isFirst);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ContractViewScreen(hopDongId: hopDongId),
+                            ),
+                          );
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,

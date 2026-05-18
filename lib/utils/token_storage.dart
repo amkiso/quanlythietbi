@@ -10,6 +10,7 @@ class TokenStorage {
   static const String _tenVaiTroKey = 'ten_vai_tro';
   static const String _khoIdKey = 'kho_id';
   static const String _doiMatKhauLanDauKey = 'doi_mat_khau_lan_dau';
+  static const String _avtKey = 'avt';
 
   // ── Remember Me keys ──
   static const String _rememberMeKey = 'remember_me';
@@ -26,6 +27,7 @@ class TokenStorage {
     required String tenVaiTro,
     int? khoId,
     bool doiMatKhauLanDau = false,
+    String? avt,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_tokenKey, token);
@@ -37,6 +39,9 @@ class TokenStorage {
     await prefs.setBool(_doiMatKhauLanDauKey, doiMatKhauLanDau);
     if (khoId != null) {
       await prefs.setInt(_khoIdKey, khoId);
+    }
+    if (avt != null) {
+      await prefs.setString(_avtKey, avt);
     }
   }
 
@@ -58,6 +63,7 @@ class TokenStorage {
       'tenVaiTro': prefs.getString(_tenVaiTroKey),
       'khoId': prefs.getInt(_khoIdKey),
       'doiMatKhauLanDau': prefs.getBool(_doiMatKhauLanDauKey) ?? false,
+      'avt': prefs.getString(_avtKey),
     };
   }
 
@@ -121,6 +127,7 @@ class TokenStorage {
     await prefs.remove(_tenVaiTroKey);
     await prefs.remove(_khoIdKey);
     await prefs.remove(_doiMatKhauLanDauKey);
+    await prefs.remove(_avtKey);
     // Cũng xóa credentials khi đăng xuất
     await prefs.remove(_savedTaiKhoanKey);
     await prefs.remove(_savedMatKhauKey);

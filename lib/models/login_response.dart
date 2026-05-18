@@ -14,6 +14,7 @@ class LoginResponse {
   final String tenVaiTro;
   final int? khoId;
   final bool doiMatKhauLanDau;
+  final String? avt;
 
   LoginResponse({
     required this.token,
@@ -24,6 +25,7 @@ class LoginResponse {
     required this.tenVaiTro,
     this.khoId,
     this.doiMatKhauLanDau = false,
+    this.avt,
   });
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) =>

@@ -58,15 +58,17 @@ class AzureImage extends StatelessWidget {
 
     Widget child;
     if (hasImage) {
+      final safeUrl = imageUrl!.trim();
+      final safeCacheKey = safeUrl.split('?').first;
+
       child = CachedNetworkImage(
-        imageUrl: imageUrl!,
+        imageUrl: safeUrl,
         width: width,
         height: height,
         fit: fit,
-        // ── Cache key: dùng URL làm key duy nhất ──
-        cacheKey: imageUrl,
+        // ── Cache key: dùng URL gốc (bỏ tham số SAS token) làm key duy nhất ──
+        cacheKey: safeCacheKey,
         // ── Không giới hạn thời gian cache ──
-        // Ảnh chỉ bị xóa khi cache đầy hoặc bị clear thủ công
         maxWidthDiskCache: 1024,
         maxHeightDiskCache: 1024,
 

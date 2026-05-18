@@ -16,6 +16,7 @@ LoginResponse _$LoginResponseFromJson(Map<String, dynamic> json) =>
       tenVaiTro: json['tenVaiTro'] as String,
       khoId: (json['khoId'] as num?)?.toInt(),
       doiMatKhauLanDau: json['doiMatKhauLanDau'] as bool? ?? false,
+      avt: json['avt'] as String?,
     );
 
 Map<String, dynamic> _$LoginResponseToJson(LoginResponse instance) =>
@@ -28,4 +29,5 @@ Map<String, dynamic> _$LoginResponseToJson(LoginResponse instance) =>
       'tenVaiTro': instance.tenVaiTro,
       'khoId': instance.khoId,
       'doiMatKhauLanDau': instance.doiMatKhauLanDau,
+      'avt': instance.avt,
     };
