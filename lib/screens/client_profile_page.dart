@@ -5,7 +5,9 @@ import '../providers/auth_provider.dart';
 import '../services/checkout_service.dart';
 import '../widgets/app_confirm_dialog.dart';
 import '../widgets/azure_image.dart';
+import 'change_password_screen.dart';
 import 'client_order_history_page.dart';
+import 'personal_info_screen.dart';
 import 'placeholder_dev_page.dart';
 
 /// CLIENT PROFILE PAGE — Hồ sơ cá nhân (vaiTroId=4)
@@ -63,9 +65,13 @@ class _ClientProfilePageState extends State<ClientProfilePage> {
                   const SizedBox(height: 16),
                   _buildOrderSection(),
                   const SizedBox(height: 16),
-                  _buildMenuItemIcon(Icons.person_outline_rounded, 'Hồ sơ cá nhân', () => _navigateTo('Hồ sơ cá nhân', Icons.person_rounded)),
+                  _buildMenuItemIcon(Icons.person_outline_rounded, 'Hồ sơ cá nhân', () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const PersonalInfoScreen()));
+                  }),
                   const SizedBox(height: 10),
-                  _buildMenuItemIcon(Icons.lock_outline_rounded, 'Đổi mật khẩu', () => _navigateTo('Đổi mật khẩu', Icons.lock_rounded)),
+                  _buildMenuItemIcon(Icons.lock_outline_rounded, 'Đổi mật khẩu', () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const ChangePasswordScreen()));
+                  }),
                   const SizedBox(height: 10),
                   _buildMenuItemIcon(Icons.chat_bubble_outline_rounded, 'Góp ý', () => _navigateTo('Góp ý', Icons.chat_bubble_rounded)),
                   const SizedBox(height: 10),

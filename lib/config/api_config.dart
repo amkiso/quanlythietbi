@@ -13,6 +13,12 @@ class ApiConfig {
   // ===== Endpoints =====
   static const String loginEndpoint = '/auth/login';
   static const String doiMatKhauEndpoint = '/auth/doi-mat-khau';
+  static const String registerInitEndpoint = '/auth/register-init';
+  static const String registerConfirmEndpoint = '/auth/register-confirm';
+  static const String forgotPasswordInitEndpoint = '/auth/forgot-password-init';
+  static const String forgotPasswordConfirmEndpoint = '/auth/forgot-password-confirm';
+  static const String profileEndpoint = '/auth/me';
+  static const String checkEmailResetEndpoint = '/auth/check-email-reset';
   static const String thietBiEndpoint = '/thiet-bi';
   static const String dashboardEndpoint = '/dashboard';
   static const String imagesEndpoint = '/images';

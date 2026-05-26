@@ -236,6 +236,56 @@ class CheckoutService {
   }
 
   // ─────────────────────────────────────────────────────
+  //  20. HÀNH ĐỘNG HỢP ĐỒNG (HỦY, HỖ TRỢ, THANH TOÁN DEMO)
+  // ─────────────────────────────────────────────────────
+
+  /// 20.1 — Hủy hợp đồng (chỉ khi trạng thái = 1: Chờ xác nhận)
+  Future<void> cancelContract(int hopDongId, {String? lyDoHuy}) async {
+    try {
+      await _dio.post(
+        '${ApiConfig.hopDongEndpoint}/$hopDongId/huy',
+        data: lyDoHuy != null ? {'lyDoHuy': lyDoHuy} : null,
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// 20.2 — Gửi yêu cầu hỗ trợ / bảo trì
+  Future<void> requestSupport(int hopDongId, {
+    required String noiDung,
+    required int loaiYeuCau, // 1=Hỗ trợ, 2=Bảo trì
+  }) async {
+    try {
+      await _dio.post(
+        '${ApiConfig.hopDongEndpoint}/$hopDongId/yeu-cau-ho-tro',
+        data: {
+          'noiDung': noiDung,
+          'loaiYeuCau': loaiYeuCau,
+        },
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// 20.3 — Demo thanh toán (cọc hoặc nợ)
+  Future<Map<String, dynamic>> demoPayment(int hopDongId) async {
+    try {
+      final response = await _dio.post(
+        '${ApiConfig.hopDongEndpoint}/$hopDongId/thanh-toan-demo',
+      );
+      final data = response.data;
+      if (data['success'] == true && data['data'] != null) {
+        return data['data'] as Map<String, dynamic>;
+      }
+      throw Exception(data['message'] ?? 'Thanh toán thất bại');
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // ─────────────────────────────────────────────────────
   //  HELPER
   // ─────────────────────────────────────────────────────
 

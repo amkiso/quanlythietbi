@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../config/app_theme.dart';
 import '../services/checkout_service.dart';
-import 'contract_view_screen.dart';
+import 'contract_detail_screen.dart';
 
 /// Màn hình Lịch sử đơn hàng — hiển thị tất cả hợp đồng của khách hàng
 class ClientOrderHistoryPage extends StatefulWidget {
@@ -28,27 +28,29 @@ class _ClientOrderHistoryPageState extends State<ClientOrderHistoryPage> {
   late int _filterStatus;
 
   final Map<int, _StatusInfo> _statusMap = {
-    1: _StatusInfo('Chờ ký kết', Icons.edit_note_rounded, Color(0xFFFFA726)),
-    2: _StatusInfo('Chờ thanh toán', Icons.payment_rounded, Color(0xFFEF5350)),
-    3: _StatusInfo('Chờ phê duyệt', Icons.hourglass_top_rounded, Color(0xFF42A5F5)),
-    4: _StatusInfo('Chờ giao hàng', Icons.local_shipping_outlined, Color(0xFF7E57C2)),
-    5: _StatusInfo('Đang cho thuê', Icons.check_circle_outline, Color(0xFF66BB6A)),
-    6: _StatusInfo('Quá hạn', Icons.warning_amber_rounded, Color(0xFFFF7043)),
-    7: _StatusInfo('Vi phạm', Icons.block_rounded, Color(0xFFE53935)),
-    8: _StatusInfo('Đã trả TB', Icons.assignment_return_rounded, Color(0xFF78909C)),
-    9: _StatusInfo('Hoàn tất', Icons.verified_rounded, Color(0xFF26A69A)),
-    10: _StatusInfo('Đã hủy', Icons.cancel_outlined, Color(0xFF9E9E9E)),
+    1: _StatusInfo('Chờ xác nhận', Icons.hourglass_top_rounded, Color(0xFFFFA726)),
+    2: _StatusInfo('Chờ TT cọc', Icons.payment_rounded, Color(0xFF26A69A)),
+    3: _StatusInfo('Chờ nhận TB', Icons.local_shipping_outlined, Color(0xFF5C6BC0)),
+    4: _StatusInfo('Đang cho thuê', Icons.check_circle_outline, Color(0xFF66BB6A)),
+    5: _StatusInfo('Vi phạm', Icons.gavel_rounded, Color(0xFFD32F2F)),
+    6: _StatusInfo('Quá hạn TT', Icons.warning_amber_rounded, Color(0xFFFF7043)),
+    7: _StatusInfo('Đã hủy (KH)', Icons.cancel_outlined, Color(0xFF9E9E9E)),
+    8: _StatusInfo('Đã thu hồi', Icons.assignment_return_rounded, Color(0xFF78909C)),
+    9: _StatusInfo('Đang kiểm tra', Icons.search_rounded, Color(0xFF7E57C2)),
+    10: _StatusInfo('Chờ TT nợ', Icons.account_balance_wallet_rounded, Color(0xFFEF5350)),
+    11: _StatusInfo('Đã hủy', Icons.block_rounded, Color(0xFFBDBDBD)),
+    12: _StatusInfo('Hoàn tất', Icons.verified_rounded, Color(0xFF2E7D32)),
   };
 
   /// Cấu hình filter chips — id, label, statusIds tương ứng
   final List<_FilterChipData> _filterChips = [
     _FilterChipData(-1, 'Tất cả', []),
-    _FilterChipData(1, 'Chờ ký', [1]),
-    _FilterChipData(2, 'Chờ TT', [2]),
-    _FilterChipData(3, 'Chờ giao', [3, 4]),
-    _FilterChipData(5, 'Đang thuê', [5]),
-    _FilterChipData(9, 'Hoàn tất', [9]),
-    _FilterChipData(10, 'Đã hủy', [10]),
+    _FilterChipData(1, 'Chờ XN', [1]),
+    _FilterChipData(2, 'Chờ TT', [2, 10]),
+    _FilterChipData(3, 'Chờ giao', [3]),
+    _FilterChipData(4, 'Đang thuê', [4]),
+    _FilterChipData(12, 'Hoàn tất', [12]),
+    _FilterChipData(7, 'Đã hủy', [7, 11]),
   ];
 
   @override
@@ -185,6 +187,7 @@ class _ClientOrderHistoryPageState extends State<ClientOrderHistoryPage> {
     final soTB = order['soThietBi'] ?? 0;
     final ngayLap = order['ngayLap'] != null ? DateTime.tryParse(order['ngayLap']) : null;
     final ngayDuKienTra = order['ngayDuKienTra'] != null ? DateTime.tryParse(order['ngayDuKienTra']) : null;
+    final laHoaToc = order['laHoaToc'] == true;
 
     return GestureDetector(
       onTap: () => _viewContract(order['hopDongId']),
@@ -204,7 +207,17 @@ class _ClientOrderHistoryPageState extends State<ClientOrderHistoryPage> {
             ),
             const SizedBox(width: 10),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(maHD, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+              Row(children: [
+                Text(maHD, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                if (laHoaToc) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                    decoration: BoxDecoration(color: Colors.orange, borderRadius: BorderRadius.circular(4)),
+                    child: const Text('🔥 Hỏa tốc', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.white)),
+                  ),
+                ],
+              ]),
               Text(info.label, style: TextStyle(fontSize: 11, color: info.color, fontWeight: FontWeight.w600)),
             ])),
             Text('${_fmt.format(tongTien)} đ', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.primary)),
@@ -232,7 +245,7 @@ class _ClientOrderHistoryPageState extends State<ClientOrderHistoryPage> {
 
   void _viewContract(int? hopDongId) {
     if (hopDongId == null) return;
-    Navigator.push(context, MaterialPageRoute(builder: (_) => ContractViewScreen(hopDongId: hopDongId)));
+    Navigator.push(context, MaterialPageRoute(builder: (_) => ContractDetailScreen(hopDongId: hopDongId)));
   }
 }
 

@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../config/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../utils/token_storage.dart';
+import 'forgot_password_screen.dart';
+import 'register_screen.dart';
 
 /// Màn hình đăng nhập - Xypher Design
 class LoginScreen extends StatefulWidget {
@@ -254,7 +256,7 @@ class _LoginScreenState extends State<LoginScreen>
                         // "Quên mật khẩu?"
                         GestureDetector(
                           onTap: () {
-                            // TODO: Navigate to forgot password screen
+                            Navigator.push(context, MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()));
                           },
                           child: const Text(
                             'Quên mật khẩu?',
@@ -575,7 +577,7 @@ class _LoginScreenState extends State<LoginScreen>
         ),
         GestureDetector(
           onTap: () {
-            // TODO: Navigate to registration screen
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterScreen()));
           },
           child: const Text(
             'Đăng ký ngay',

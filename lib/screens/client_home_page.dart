@@ -13,7 +13,7 @@ import '../widgets/azure_image.dart';
 import 'client_device_detail_page.dart';
 import 'client_notification_page.dart';
 import 'client_order_history_page.dart';
-import 'contract_view_screen.dart';
+import 'contract_detail_screen.dart';
 
 /// CLIENT HOME PAGE — Trang chủ dành cho Khách hàng
 class ClientHomePage extends StatefulWidget {
@@ -425,54 +425,62 @@ class ClientHomePageState extends State<ClientHomePage> {
   }
 
   // ── HỢP ĐỒNG (DYNAMIC) ──
-  // Sử dụng trangThaiId (numeric) để ánh xạ màu chính xác theo API:
-  //  1: Chờ ký kết   | 2: Chờ thanh toán  | 3: Chờ phê duyệt
-  //  4: Chờ giao hàng| 5: Đang cho thuê   | 6: Quá hạn
-  //  7: Vi phạm      | 8: Đã trả TB       | 9: Hoàn tất
-  // 10: Đã hủy
+  // Sử dụng trangThaiId (numeric) để ánh xạ màu chính xác theo API (12 trạng thái):
+  //  1: Chờ xác nhận  | 2: Chờ TT cọc    | 3: Chờ nhận TB
+  //  4: Đang cho thuê  | 5: Vi phạm       | 6: Quá hạn TT
+  //  7: Đã hủy (KH)   | 8: Đã thu hồi    | 9: Đang kiểm tra
+  // 10: Chờ TT nợ    | 11: Đã hủy       | 12: Hoàn tất
   Gradient _getContractGradient(int statusId) {
     Color color1;
     Color color2;
     switch (statusId) {
-      case 1: // Chờ ký kết — Amber đậm
+      case 1: // Chờ xác nhận — Amber đậm
         color1 = const Color(0xFFB85C00);
         color2 = const Color(0xFFD4790A);
         break;
-      case 2: // Chờ thanh toán — Teal đậm
+      case 2: // Chờ TT cọc — Teal đậm
         color1 = const Color(0xFF2A7A7D);
         color2 = const Color(0xFF358E8F);
         break;
-      case 3: // Chờ phê duyệt — Indigo xám
+      case 3: // Chờ nhận TB — Indigo xám
         color1 = const Color(0xFF37526B);
         color2 = const Color(0xFF476882);
         break;
-      case 4: // Chờ giao hàng — Blue đậm
-        color1 = const Color(0xFF1565C0);
-        color2 = const Color(0xFF1E7BD6);
-        break;
-      case 5: // Đang cho thuê — Teal xanh đậm
+      case 4: // Đang cho thuê — Teal xanh đậm
         color1 = const Color(0xFF0D7362);
         color2 = const Color(0xFF148F7A);
         break;
-      case 6: // Quá hạn — Cam đỏ đậm
-        color1 = const Color(0xFFC63F17);
-        color2 = const Color(0xFFD95228);
-        break;
-      case 7: // Vi phạm — Đỏ đậm
+      case 5: // Vi phạm - chấm dứt — Đỏ đậm
         color1 = const Color(0xFFAD1F1F);
         color2 = const Color(0xFFC62828);
         break;
-      case 8: // Đã trả TB — Xám xanh
+      case 6: // Quá hạn thanh toán — Cam đỏ
+        color1 = const Color(0xFFC63F17);
+        color2 = const Color(0xFFD95228);
+        break;
+      case 7: // Đã hủy bởi KH — Xám
+        color1 = const Color(0xFF5C5C5C);
+        color2 = const Color(0xFF6E6E6E);
+        break;
+      case 8: // Đã thu hồi TB — Xám xanh
         color1 = const Color(0xFF455A64);
         color2 = const Color(0xFF546E7A);
         break;
-      case 9: // Hoàn tất — Xanh lá đậm
-        color1 = const Color(0xFF2E7D32);
-        color2 = const Color(0xFF3A9140);
+      case 9: // Đang kiểm tra — Tím
+        color1 = const Color(0xFF5E35B1);
+        color2 = const Color(0xFF7E57C2);
         break;
-      case 10: // Đã hủy — Xám trung tính
+      case 10: // Chờ TT nợ — Đỏ hồng
+        color1 = const Color(0xFFC62828);
+        color2 = const Color(0xFFE53935);
+        break;
+      case 11: // Đã hủy — Xám nhạt
         color1 = const Color(0xFF5C5C5C);
         color2 = const Color(0xFF6E6E6E);
+        break;
+      case 12: // Hoàn tất — Xanh lá đậm
+        color1 = const Color(0xFF2E7D32);
+        color2 = const Color(0xFF3A9140);
         break;
       default:
         color1 = const Color(0xFF3D50C4);
@@ -492,12 +500,14 @@ class ClientHomePageState extends State<ClientHomePage> {
       case 2: return const Color(0xFF2A7A7D);
       case 3: return const Color(0xFF37526B);
       case 4: return const Color(0xFF1565C0);
-      case 5: return const Color(0xFF0D7362);
+      case 5: return const Color(0xFFAD1F1F);
       case 6: return const Color(0xFFC63F17);
-      case 7: return const Color(0xFFAD1F1F);
+      case 7: return const Color(0xFF5C5C5C);
       case 8: return const Color(0xFF455A64);
-      case 9: return const Color(0xFF2E7D32);
-      case 10: return const Color(0xFF5C5C5C);
+      case 9: return const Color(0xFF5E35B1);
+      case 10: return const Color(0xFFC62828);
+      case 11: return const Color(0xFF5C5C5C);
+      case 12: return const Color(0xFF2E7D32);
       default: return const Color(0xFF3D50C4);
     }
   }
@@ -532,6 +542,7 @@ class ClientHomePageState extends State<ClientHomePage> {
     final soTB = contract['soThietBi'] ?? 0;
     final ngayDuKienTra = contract['ngayDuKienTra'] != null ? DateTime.tryParse(contract['ngayDuKienTra'].toString()) : null;
     final hopDongId = contract['hopDongId'] as int?;
+    final laHoaToc = contract['laHoaToc'] == true;
 
     String hanTraText = '';
     String conLaiText = '';
@@ -597,6 +608,10 @@ class ClientHomePageState extends State<ClientHomePage> {
             const SizedBox(height: 10),
             Row(children: [
               Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(6)), child: Text(trangThai, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600))),
+              if (laHoaToc) ...[
+                const SizedBox(width: 6),
+                Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: Colors.orange, borderRadius: BorderRadius.circular(6)), child: const Text('🔥 Hỏa tốc', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold))),
+              ],
               const Spacer(),
               Text('$soTB SP', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
             ]),
@@ -619,7 +634,7 @@ class ClientHomePageState extends State<ClientHomePage> {
             const SizedBox(height: 12),
             Row(children: [
               _buildContractBtn('Xem chi tiết', outlined: true, onTap: () {
-                if (hopDongId != null) Navigator.push(context, MaterialPageRoute(builder: (_) => ContractViewScreen(hopDongId: hopDongId)));
+                if (hopDongId != null) Navigator.push(context, MaterialPageRoute(builder: (_) => ContractDetailScreen(hopDongId: hopDongId)));
               }),
               const SizedBox(width: 8),
               _buildContractBtn('Lịch sử đơn', outlined: false, onTap: () {

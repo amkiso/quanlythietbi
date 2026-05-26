@@ -5,14 +5,13 @@ import '../models/gio_hang_item.dart';
 import '../models/checkout_models.dart';
 import '../services/checkout_mock_data.dart';
 import '../services/checkout_service.dart';
-import '../utils/token_storage.dart';
 import '../widgets/address_card.dart';
 import '../widgets/azure_image.dart';
 import '../widgets/payment_method_selector.dart';
 import '../widgets/rental_duration_selector.dart';
 import '../widgets/order_summary_card.dart';
 import 'add_address_screen.dart';
-import 'electronic_contract_screen.dart';
+import 'contract_success_screen.dart';
 
 /// ═══════════════════════════════════════════════════════
 ///  CHECKOUT PAGE — Thanh toán
@@ -757,7 +756,7 @@ class _ClientCheckoutPageState extends State<ClientCheckoutPage> {
     }
   }
 
-  /// Gọi API tạo hợp đồng rồi chuyển sang màn hình ký kết
+  /// Gọi API tạo hợp đồng → Chuyển đến màn hình thành công
   Future<void> _onPlaceOrder() async {
     if (!_isReadyToOrder) return;
 
@@ -792,27 +791,17 @@ class _ClientCheckoutPageState extends State<ClientCheckoutPage> {
 
       if (!mounted) return;
 
-      // Lấy email user từ storage
-      final userInfo = await TokenStorage.getSavedUserInfo();
-      final userEmail = userInfo['email'] as String? ?? '';
+      // Lấy thông tin từ response
+      final maHD = apiResponse['maHopDong'] ?? '';
+      final hopDongId = apiResponse['hopDongId'] as int?;
 
-      // Build contract data từ API response
-      final contractData = ElectronicContractData.fromApiResponse(
-        apiData: apiResponse,
-        address: _address!,
-        startDate: _startDate!,
-        endDate: _endDate!,
-        soThangThue: soThangThue,
-        userEmail: userEmail,
-      );
-
-      if (!mounted) return;
-
-      Navigator.push(
+      // Chuyển đến màn hình thành công (không cần ký hợp đồng nữa)
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => ElectronicContractScreen(
-            contractData: contractData,
+          builder: (_) => ContractSuccessScreen(
+            maHopDong: maHD,
+            hopDongId: hopDongId ?? 0,
           ),
         ),
       );

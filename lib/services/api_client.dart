@@ -22,8 +22,10 @@ class ApiClient {
     // JWT Interceptor - tự động thêm token vào header
     dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
-        // Bỏ qua token cho endpoint login
-        if (!options.path.contains('/auth/login')) {
+        // Bỏ qua token cho các endpoint công khai (login, register, forgot-password)
+        final publicPaths = ['/auth/login', '/auth/register', '/auth/forgot-password', '/auth/check-email'];
+        final isPublic = publicPaths.any((p) => options.path.contains(p));
+        if (!isPublic) {
           final token = await TokenStorage.getToken();
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
