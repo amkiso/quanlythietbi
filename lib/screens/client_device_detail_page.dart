@@ -5,7 +5,7 @@ import '../config/app_theme.dart';
 import '../models/loai_thiet_bi.dart';
 import '../providers/cart_provider.dart';
 import '../services/danh_muc_service.dart';
-import '../widgets/azure_image.dart';
+import '../widgets/cloud_image.dart';
 
 /// ═══════════════════════════════════════════════════════
 ///  DEVICE DETAIL PAGE — Chi tiết thiết bị (Client)
@@ -234,7 +234,7 @@ class _ClientDeviceDetailPageState extends State<ClientDeviceDetailPage> {
             },
             itemCount: images.length,
             itemBuilder: (context, index) {
-              return AzureImage(
+              return CloudImage(
                 imageUrl: images[index],
                 width: double.infinity,
                 height: 320,
@@ -674,7 +674,7 @@ class _ClientDeviceDetailPageState extends State<ClientDeviceDetailPage> {
                   const BorderRadius.vertical(top: Radius.circular(14)),
               child: Stack(
                 children: [
-                  AzureImage(
+                  CloudImage(
                     imageUrl: ltb.anhDaiDien,
                     width: 155,
                     height: 100,

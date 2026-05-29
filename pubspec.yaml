@@ -58,6 +58,8 @@ dependencies:
 
   # Signature pad — Ký tên điện tử trên hợp đồng
   signature: ^5.4.1
+  image_picker: ^1.2.2
+  mobile_scanner: ^7.2.0
 
 dev_dependencies:
   flutter_test:

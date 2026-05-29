@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import '../config/app_theme.dart';
 import '../providers/cart_provider.dart';
 import '../models/gio_hang_item.dart';
-import '../widgets/azure_image.dart';
+import '../widgets/cloud_image.dart';
 import 'client_checkout_page.dart';
 
 /// ═══════════════════════════════════════════════════════
@@ -372,7 +372,7 @@ class _ClientCartPageState extends State<ClientCartPage> {
               height: 72,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(10),
-                child: AzureImage(
+                child: CloudImage(
                   imageUrl: item.anhDaiDien,
                   width: 72,
                   height: 72,

@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import '../config/app_theme.dart';
 import '../models/loai_thiet_bi.dart';
 import '../providers/danh_muc_provider.dart';
-import '../widgets/azure_image.dart';
+import '../widgets/cloud_image.dart';
 import 'admin_chi_tiet_thiet_bi_page.dart';
 
 /// ═══════════════════════════════════════════════════════
@@ -438,7 +438,7 @@ class _AdminDanhMucPageState extends State<AdminDanhMucPage>
                   children: [
                     // Ảnh hoặc placeholder
                     Center(
-                      child: AzureImage(
+                      child: CloudImage(
                         imageUrl: loaiTB.anhDaiDien,
                         fit: BoxFit.cover,
                         width: double.infinity,

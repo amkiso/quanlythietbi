@@ -4,7 +4,7 @@ import '../config/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../services/checkout_service.dart';
 import '../widgets/app_confirm_dialog.dart';
-import '../widgets/azure_image.dart';
+import '../widgets/cloud_image.dart';
 import 'change_password_screen.dart';
 import 'client_order_history_page.dart';
 import 'personal_info_screen.dart';
@@ -63,8 +63,10 @@ class _ClientProfilePageState extends State<ClientProfilePage> {
                 children: [
                   _buildHeader(auth),
                   const SizedBox(height: 16),
-                  _buildOrderSection(),
-                  const SizedBox(height: 16),
+                  if (auth.vaiTroId == 4) ...[
+                    _buildOrderSection(),
+                    const SizedBox(height: 16),
+                  ],
                   _buildMenuItemIcon(Icons.person_outline_rounded, 'Hồ sơ cá nhân', () {
                     Navigator.push(context, MaterialPageRoute(builder: (_) => const PersonalInfoScreen()));
                   }),
@@ -107,8 +109,8 @@ class _ClientProfilePageState extends State<ClientProfilePage> {
               border: Border.all(color: Colors.white, width: 2),
             ),
             child: ClipOval(
-              child: (auth.avt != null && auth.avt!.isNotEmpty)
-                  ? AzureImage(imageUrl: auth.avt!, width: 52, height: 52, fit: BoxFit.cover)
+              child: (auth.avt != null && auth.avt!.trim().isNotEmpty)
+                  ? CloudImage(imageUrl: Uri.encodeFull(auth.avt!.trim()), width: 52, height: 52, fit: BoxFit.cover)
                   : Image.network('https://ui-avatars.com/api/?name=$nameEncoded&background=4A6CF7&color=fff&size=200', fit: BoxFit.cover),
             ),
           ),

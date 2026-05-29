@@ -181,6 +181,26 @@ class AuthService {
     }
   }
 
+  /// Cập nhật thông tin cá nhân
+  /// PUT /api/auth/me
+  Future<void> updateProfile({
+    required String hoTen,
+    required String soDienThoai,
+    required String email,
+  }) async {
+    try {
+      await _dio.put(
+        ApiConfig.profileEndpoint,
+        data: {
+          'hoTen': hoTen,
+          'soDienThoai': soDienThoai,
+          'email': email,
+        },
+      );
+    } on DioException catch (e) {
+      throw Exception(ApiClient.getErrorMessage(e));
+    }
+  }
   // ─────────────────────────────────────────────────────
   //  KIỂM TRA EMAIL QUÊN MẬT KHẨU
   // ─────────────────────────────────────────────────────

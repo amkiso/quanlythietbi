@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import '../config/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../services/auth_service.dart';
-import '../widgets/azure_image.dart';
+import '../widgets/cloud_image.dart';
+import 'edit_profile_screen.dart';
+import 'manage_addresses_screen.dart';
 
 /// PERSONAL INFO SCREEN — Thông tin cá nhân
 class PersonalInfoScreen extends StatefulWidget {
@@ -78,27 +80,6 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen>
     return s.isEmpty ? fallback : s;
   }
 
-  String _formatDate(dynamic value) {
-    if (value == null) return 'Chưa cập nhật';
-    try {
-      final dt = DateTime.parse(value.toString());
-      return '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
-    } catch (_) {
-      return value.toString();
-    }
-  }
-
-  String _formatStatus(dynamic value) {
-    if (value == null) return 'Chưa cập nhật';
-    if (value is bool) return value ? 'Hoạt động' : 'Ngưng hoạt động';
-    if (value is int) return value == 1 ? 'Hoạt động' : 'Ngưng hoạt động';
-    final s = value.toString().trim().toLowerCase();
-    if (s == 'true' || s == '1' || s == 'active' || s == 'hoạt động') {
-      return 'Hoạt động';
-    }
-    return value.toString();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -108,6 +89,20 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen>
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit_rounded),
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => EditProfileScreen(profile: _profile)),
+              );
+              if (result == true) {
+                _loadProfile();
+              }
+            },
+          ),
+        ],
       ),
       body: _isLoading
           ? _buildLoading()
@@ -255,12 +250,57 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen>
                           label: 'Số điện thoại',
                           value: _safe(_profile['soDienThoai']),
                         ),
-                        _InfoItem(
-                          icon: Icons.location_on_outlined,
-                          label: 'Địa chỉ',
-                          value: _safe(_profile['diaChi']),
-                        ),
                       ],
+                    ),
+                    const SizedBox(height: 16),
+                    InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const ManageAddressesScreen()),
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(14),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: AppColors.divider),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.03),
+                              blurRadius: 10,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: AppColors.primarySurface,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(Icons.location_on_outlined, color: AppColors.primary, size: 20),
+                            ),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Text(
+                                'Quản lý địa chỉ',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                            ),
+                            const Icon(Icons.chevron_right_rounded, color: AppColors.textHint, size: 22),
+                          ],
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -276,14 +316,6 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen>
   Widget _buildHeaderSection() {
     final auth = context.read<AuthProvider>();
     final name = _safe(_profile['hoTen'], auth.hoTen ?? 'Người dùng');
-    
-    String? validAvatarUrl;
-    final profileAvt = _profile['avt']?.toString();
-    if (profileAvt != null && profileAvt != 'null' && profileAvt.trim().isNotEmpty) {
-      validAvatarUrl = profileAvt;
-    } else if (auth.avt != null && auth.avt!.isNotEmpty) {
-      validAvatarUrl = auth.avt;
-    }
     
     final nameEncoded = Uri.encodeComponent(name);
 
@@ -326,9 +358,9 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen>
                   ],
                 ),
                 child: ClipOval(
-                  child: (validAvatarUrl != null)
-                      ? AzureImage(
-                          imageUrl: validAvatarUrl,
+                  child: (auth.avt != null && auth.avt!.trim().isNotEmpty)
+                      ? CloudImage(
+                          imageUrl: Uri.encodeFull(auth.avt!.trim()),
                           width: 80,
                           height: 80,
                           fit: BoxFit.cover,
@@ -474,9 +506,9 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen>
                 const SizedBox(height: 2),
                 Text(
                   item.value,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 15,
-                    color: item.valueColor ?? AppColors.textPrimary,
+                    color: AppColors.textPrimary,
                     fontWeight: FontWeight.w500,
                   ),
                   maxLines: 2,
@@ -496,12 +528,10 @@ class _InfoItem {
   final IconData icon;
   final String label;
   final String value;
-  final Color? valueColor;
 
   const _InfoItem({
     required this.icon,
     required this.label,
     required this.value,
-    this.valueColor,
   });
 }

@@ -6,7 +6,7 @@ part 'image_upload_response.g.dart';
 /// Chứa SAS URL và thông tin file cần upload
 @JsonSerializable()
 class SasUploadData {
-  /// SAS URL có thời hạn 5 phút để upload trực tiếp lên Azure
+  /// Presigned URL có thời hạn 5 phút để upload trực tiếp lên Cloudflare R2
   final String sasUrl;
 
   /// Tên file UUID được server tạo (vd: "a1b2c3d4-...jpg")

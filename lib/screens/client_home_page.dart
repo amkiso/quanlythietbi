@@ -9,7 +9,7 @@ import '../providers/auth_provider.dart';
 import '../providers/cart_provider.dart';
 import '../services/danh_muc_service.dart';
 import '../services/checkout_service.dart';
-import '../widgets/azure_image.dart';
+import '../widgets/cloud_image.dart';
 import 'client_device_detail_page.dart';
 import 'client_notification_page.dart';
 import 'client_order_history_page.dart';
@@ -276,7 +276,7 @@ class ClientHomePageState extends State<ClientHomePage> {
                       child: Row(children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(6),
-                          child: AzureImage(imageUrl: ltb.anhDaiDien, width: 36, height: 36, fit: BoxFit.cover, fallbackIcon: Icons.devices_rounded, fallbackIconSize: 18),
+                          child: CloudImage(imageUrl: ltb.anhDaiDien, width: 36, height: 36, fit: BoxFit.cover, fallbackIcon: Icons.devices_rounded, fallbackIconSize: 18),
                         ),
                         const SizedBox(width: 10),
                         Expanded(child: Column(
@@ -412,7 +412,7 @@ class ClientHomePageState extends State<ClientHomePage> {
                   ),
                   child: ClipOval(
                     child: (auth.avt != null && auth.avt!.trim().isNotEmpty)
-                        ? AzureImage(imageUrl: Uri.encodeFull(auth.avt!.trim()), width: 42, height: 42, fit: BoxFit.cover)
+                        ? CloudImage(imageUrl: Uri.encodeFull(auth.avt!.trim()), width: 42, height: 42, fit: BoxFit.cover)
                         : Image.network('https://ui-avatars.com/api/?name=$nameEncoded&background=4A6CF7&color=fff&size=200', fit: BoxFit.cover),
                   ),
                 ),
@@ -806,7 +806,7 @@ class ClientHomePageState extends State<ClientHomePage> {
               height: 120,
               width: double.infinity,
               child: Stack(children: [
-                AzureImage(imageUrl: ltb.anhDaiDien, width: double.infinity, height: 120, fit: BoxFit.cover, fallbackIcon: Icons.devices_rounded),
+                CloudImage(imageUrl: ltb.anhDaiDien, width: double.infinity, height: 120, fit: BoxFit.cover, fallbackIcon: Icons.devices_rounded),
                 Positioned(top: 8, left: 8, child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.9), borderRadius: BorderRadius.circular(6)),

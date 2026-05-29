@@ -133,6 +133,35 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Cập nhật avatar local
+  Future<void> updateAvatar(String newAvt) async {
+    if (_loginResponse != null) {
+      _loginResponse = LoginResponse(
+        token: _loginResponse!.token,
+        nguoiDungId: _loginResponse!.nguoiDungId,
+        hoTen: _loginResponse!.hoTen,
+        maNguoiDung: _loginResponse!.maNguoiDung,
+        vaiTroId: _loginResponse!.vaiTroId,
+        tenVaiTro: _loginResponse!.tenVaiTro,
+        khoId: _loginResponse!.khoId,
+        doiMatKhauLanDau: _loginResponse!.doiMatKhauLanDau,
+        avt: newAvt,
+      );
+      await TokenStorage.saveLoginInfo(
+        token: _loginResponse!.token,
+        nguoiDungId: _loginResponse!.nguoiDungId,
+        hoTen: _loginResponse!.hoTen,
+        maNguoiDung: _loginResponse!.maNguoiDung,
+        vaiTroId: _loginResponse!.vaiTroId,
+        tenVaiTro: _loginResponse!.tenVaiTro,
+        khoId: _loginResponse!.khoId,
+        doiMatKhauLanDau: _loginResponse!.doiMatKhauLanDau,
+        avt: newAvt,
+      );
+      notifyListeners();
+    }
+  }
+
   /// Xóa thông báo lỗi
   void clearError() {
     _errorMessage = null;

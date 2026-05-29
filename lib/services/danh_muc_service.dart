@@ -176,9 +176,11 @@ class DanhMucService {
         return apiResponse.data!.map((item) {
           final map = item as Map<String, dynamic>;
           return {
+            'thietBiId': map['thietBiId'] ?? 0,
             'maTaiSan': map['maTaiSan'] ?? '',
             'tinhTrangId': map['tinhTrangId'] ?? 0,
             'khoHienTai': map['tenKho'] ?? 'Không rõ',
+            'qrCodeUrl': map['qrCodeUrl'],
           };
         }).toList();
       }
@@ -240,6 +242,23 @@ class DanhMucService {
         return apiResponse.data!;
       }
       return [];
+    } on DioException catch (e) {
+      throw Exception(ApiClient.getErrorMessage(e));
+    }
+  }
+
+  /// Lấy hoặc tạo QR Code cho thiết bị
+  Future<String?> generateQrCode(int thietBiId) async {
+    try {
+      final response = await _dio.get('${ApiConfig.thietBiEndpoint}/$thietBiId/qr-code');
+      final apiResponse = ApiResponse<Map<String, dynamic>>.fromJson(
+        response.data,
+        (json) => json as Map<String, dynamic>,
+      );
+      if (apiResponse.success && apiResponse.data != null) {
+        return apiResponse.data!['qrCodeUrl'] as String?;
+      }
+      return null;
     } on DioException catch (e) {
       throw Exception(ApiClient.getErrorMessage(e));
     }

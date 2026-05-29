@@ -10,8 +10,9 @@ import 'admin_dashboard_page.dart';
 import 'admin_danh_muc_page.dart';
 import 'client_home_page.dart';
 import 'client_cart_page.dart';
-import '../widgets/azure_image.dart';
+import '../widgets/cloud_image.dart';
 import 'client_profile_page.dart';
+import 'qr_scanner_screen.dart';
 
 /// ═══════════════════════════════════════════════════════
 ///  HomeScreen — Bottom Navigation theo vai trò (VaiTroID)
@@ -52,6 +53,18 @@ class _HomeScreenState extends State<HomeScreen> {
         index: _currentIndex,
         children: config.pages,
       ),
+      floatingActionButton: (tenVaiTro == 'Thủ kho' || tenVaiTro == 'Kỹ thuật viên')
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const QrScannerScreen()),
+                );
+              },
+              backgroundColor: AppColors.primary,
+              child: const Icon(Icons.qr_code_scanner_rounded, color: Colors.white),
+            )
+          : null,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           boxShadow: [
@@ -99,19 +112,15 @@ class _HomeScreenState extends State<HomeScreen> {
   //  ADMIN SCAFFOLD — Custom floating nav bar
   // ═══════════════════════════════════════════════════
 
-  /// Danh sách các trang cho Admin
   List<Widget> get _adminPages => [
         const AdminDashboardPage(),
       const AdminDanhMucPage(),
-        const PlaceholderPage(
-          title: 'Quét QR',
-          icon: Icons.qr_code_scanner_rounded,
-        ),
+        const QrScannerScreen(),
         const PlaceholderPage(
           title: 'Lịch sử giao dịch',
           icon: Icons.access_time_filled,
         ),
-        _buildProfilePage(),
+        const ClientProfilePage(),
       ];
 
   Widget _buildAdminScaffold() {
@@ -215,10 +224,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
           pages: [
-            const PlaceholderPage(
-              title: 'Dashboard',
-              icon: Icons.dashboard_rounded,
-            ),
+            const AdminDashboardPage(),
             const PlaceholderPage(
               title: 'Quản lý Kho',
               icon: Icons.warehouse_rounded,
@@ -231,7 +237,7 @@ class _HomeScreenState extends State<HomeScreen> {
               title: 'Nhập kho',
               icon: Icons.move_to_inbox_rounded,
             ),
-            _buildProfilePage(),
+            const ClientProfilePage(),
           ],
         );
 
@@ -265,10 +271,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
           pages: [
-            const PlaceholderPage(
-              title: 'Dashboard',
-              icon: Icons.dashboard_rounded,
-            ),
+            const AdminDashboardPage(),
             const PlaceholderPage(
               title: 'Giao nhận',
               icon: Icons.local_shipping_rounded,
@@ -281,7 +284,7 @@ class _HomeScreenState extends State<HomeScreen> {
               title: 'Sự cố',
               icon: Icons.warning_amber_rounded,
             ),
-            _buildProfilePage(),
+            const ClientProfilePage(),
           ],
         );
 
@@ -357,365 +360,12 @@ class _HomeScreenState extends State<HomeScreen> {
               title: 'Trang chủ',
               icon: Icons.home_rounded,
             ),
-            _buildProfilePage(),
+            const ClientProfilePage(),
           ],
         );
     }
   }
 
-  // ═══════════════════════════════════════════════════
-  //  PROFILE / PERSONAL PAGE (shared across roles)
-  // ═══════════════════════════════════════════════════
-
-  Widget _buildProfilePage() {
-    return Consumer<AuthProvider>(
-      builder: (context, auth, _) {
-        return Scaffold(
-          body: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF1F2937), Color(0xFF374151)],
-              ),
-            ),
-            child: SafeArea(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  return SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minHeight: constraints.maxHeight,
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Center(
-                          child: Container(
-                            constraints: const BoxConstraints(maxWidth: 450),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.3),
-                                  blurRadius: 60,
-                                  offset: const Offset(0, 20),
-                                ),
-                              ],
-                            ),
-                            child: IntrinsicHeight(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  _buildProfileInfoBox(auth),
-                                  Padding(
-                                    padding: const EdgeInsets.fromLTRB(30, 20, 30, 0),
-                                    child: Column(
-                                      children: [
-                                        _buildMenuItem(Icons.person_outline, 'Hồ sơ cá nhân', () {}),
-                                        _buildMenuItem(Icons.lock_outline, 'Đổi mật khẩu', () {}),
-                                        _buildManageMenu(context),
-                                        _buildMenuItem(Icons.chat_bubble_outline, 'Góp ý', () {}),
-                                      ],
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  Padding(
-                                    padding: const EdgeInsets.fromLTRB(30, 20, 30, 30),
-                                    child: _buildLogoutButton(),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildProfileInfoBox(AuthProvider auth) {
-    final name = auth.hoTen?.isNotEmpty == true ? auth.hoTen! : 'Người dùng';
-    final nameEncoded = Uri.encodeComponent(name);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 25),
-      decoration: const BoxDecoration(
-        color: Color(0xFFF8F9FA),
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(15),
-        decoration: BoxDecoration(
-          color: const Color(0xFF4A6CF7),
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF6077FC).withValues(alpha: 0.12),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
-                color: Colors.white,
-              ),
-              child: ClipOval(
-                child: (auth.avt != null && auth.avt!.isNotEmpty)
-                    ? AzureImage(imageUrl: auth.avt!, width: 50, height: 50, fit: BoxFit.cover)
-                    : Image.network('https://ui-avatars.com/api/?name=$nameEncoded&background=4A6CF7&color=fff&size=200', fit: BoxFit.cover),
-              ),
-            ),
-            const SizedBox(width: 15),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    auth.maNguoiDung ?? '0123 456 789',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMenuItem(IconData icon, String title, VoidCallback onTap) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFEEEEEE)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF0F0F0),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, color: const Color(0xFF4A6CF7), size: 20),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    color: Color(0xFF444444),
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              const Icon(Icons.chevron_right_rounded, color: Color(0xFF999999), size: 20),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildManageMenu(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFEEEEEE)),
-          ),
-          child: ExpansionTile(
-            tilePadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 2),
-            leading: Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF0F0F0),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.folder_outlined, color: Color(0xFF4A6CF7), size: 20),
-            ),
-            title: const Text(
-              'Quản lý',
-              style: TextStyle(
-                color: Color(0xFF444444),
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            iconColor: const Color(0xFF999999),
-            collapsedIconColor: const Color(0xFF999999),
-            childrenPadding: const EdgeInsets.only(bottom: 8),
-            children: [
-              _buildSubMenuItem(Icons.notifications_outlined, 'Thông báo'),
-              _buildSubMenuItem(Icons.people_outline, 'Người dùng'),
-              _buildSubMenuItem(Icons.devices_outlined, 'Thiết bị'),
-              _buildSubMenuItem(Icons.description_outlined, 'Hợp đồng'),
-              _buildSubMenuItem(Icons.article_outlined, 'Điều khoản'),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSubMenuItem(IconData icon, String title) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 18, right: 18, bottom: 6),
-      child: InkWell(
-        onTap: () {},
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFBFBFE),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE8ECFF)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8ECFF),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, color: const Color(0xFF4A6CF7), size: 18),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    color: Color(0xFF444444),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLogoutButton() {
-    return InkWell(
-      onTap: _handleLogout,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFFF6B6B), Color(0xFFEE5A5A)],
-          ),
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFFFF6B6B).withValues(alpha: 0.35),
-              blurRadius: 20,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.logout_rounded, color: Colors.white, size: 20),
-            ),
-            const SizedBox(width: 14),
-            const Expanded(
-              child: Text(
-                'Đăng xuất',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-            const Icon(Icons.chevron_right_rounded, color: Colors.white, size: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ═══════════════════════════════════════════════════
-  //  LOGOUT
-  // ═══════════════════════════════════════════════════
-
-  Future<void> _handleLogout() async {
-    final confirmed = await AppConfirmDialog.show(
-      context,
-      title: 'Đăng xuất',
-      content: 'Bạn có muốn đăng xuất không?',
-      confirmText: 'Đăng xuất',
-      cancelText: 'Hủy',
-      icon: Icons.logout,
-      confirmColor: AppColors.error,
-    );
-
-    if (confirmed && mounted) {
-      await context.read<AuthProvider>().logout();
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/login');
-      }
-    }
-  }
 }
 
 // ═══════════════════════════════════════════════════

@@ -6,7 +6,7 @@ import '../models/loai_thiet_bi.dart';
 import '../providers/danh_muc_provider.dart';
 import '../widgets/app_confirm_dialog.dart';
 import '../widgets/app_snackbar.dart';
-import '../widgets/azure_image.dart';
+import '../widgets/cloud_image.dart';
 
 /// Màn hình chi tiết loại thiết bị — Xem / Sửa / Xóa
 class AdminChiTietThietBiPage extends StatefulWidget {
@@ -117,6 +117,86 @@ class _AdminChiTietThietBiPageState extends State<AdminChiTietThietBiPage> {
     }
   }
 
+  Future<void> _handleGenerateQr(BuildContext context, DanhMucProvider provider, int thietBiId) async {
+    final qrUrl = await provider.generateQrCode(thietBiId);
+    if (qrUrl != null && mounted) {
+      AppSnackBar.showSuccess(context, 'Tạo mã QR thành công!');
+    } else if (mounted) {
+      AppSnackBar.showError(context, provider.errorMessage ?? 'Không thể tạo mã QR');
+    }
+  }
+
+  void _showQrDialog(BuildContext context, String maTaiSan, String qrUrl) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Column(
+          children: [
+            const Icon(Icons.qr_code_scanner_rounded, size: 48, color: AppColors.primary),
+            const SizedBox(height: 8),
+            Text('Mã QR Thiết Bị', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+            Text(maTaiSan, style: const TextStyle(fontSize: 14, color: AppColors.textSecondary)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 200,
+              height: 200,
+              decoration: BoxDecoration(
+                border: Border.all(color: AppColors.divider, width: 2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: CloudImage(
+                  imageUrl: qrUrl,
+                  fit: BoxFit.cover,
+                  fallbackIcon: Icons.qr_code_2_rounded,
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildQrActionButton(Icons.download_rounded, 'Lưu ảnh', () {
+                  Navigator.pop(ctx);
+                  AppSnackBar.showSuccess(context, 'Đã lưu ảnh QR vào thiết bị');
+                }),
+                _buildQrActionButton(Icons.print_rounded, 'In mã', () {
+                  Navigator.pop(ctx);
+                  AppSnackBar.showInfo(context, 'Chức năng in mã đang phát triển');
+                }),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQrActionButton(IconData icon, String label, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: AppColors.primary, size: 24),
+            const SizedBox(height: 4),
+            Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.primary)),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<DanhMucProvider>(
@@ -190,7 +270,7 @@ class _AdminChiTietThietBiPageState extends State<AdminChiTietThietBiPage> {
             ),
           ),
           child: Center(
-            child: AzureImage(
+            child: CloudImage(
               imageUrl: item.anhDaiDien,
               fit: BoxFit.cover,
               width: double.infinity,
@@ -461,13 +541,42 @@ class _AdminChiTietThietBiPageState extends State<AdminChiTietThietBiPage> {
                         ],
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(statusName, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: statusColor)),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: statusColor.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(statusName, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: statusColor)),
+                        ),
+                        const SizedBox(height: 6),
+                        tb['qrCodeUrl'] == null
+                            ? InkWell(
+                                onTap: () => _handleGenerateQr(context, provider, tb['thietBiId'] as int),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Text('Tạo QR', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.orange)),
+                                ),
+                              )
+                            : InkWell(
+                                onTap: () => _showQrDialog(context, tb['maTaiSan'] as String, tb['qrCodeUrl'] as String),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Text('Xem QR', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.primary)),
+                                ),
+                              ),
+                      ],
                     ),
                   ],
                 ),

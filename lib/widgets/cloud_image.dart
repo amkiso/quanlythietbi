@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
-/// Widget hiển thị ảnh từ Azure Blob Storage với cơ chế caching thông minh.
+/// Widget hiển thị ảnh từ Cloudflare R2 (S3 API) với cơ chế caching thông minh.
 ///
 /// Logic caching:
 /// 1. Lần đầu load ảnh → tải từ server, lưu vào bộ nhớ cục bộ (disk cache).
@@ -11,8 +11,8 @@ import 'package:flutter/material.dart';
 ///    - File cache bị hỏng/không tồn tại hoặc lần tải trước bị lỗi.
 ///
 /// Tích hợp: placeholder loading shimmer + error fallback UI.
-class AzureImage extends StatelessWidget {
-  /// URL đầy đủ của ảnh (từ API, ví dụ: https://mediaserverproject.blob.core.windows.net/products/...)
+class CloudImage extends StatelessWidget {
+  /// URL đầy đủ của ảnh (từ API, ví dụ: https://endpoint.cloudflarestorage.com/quanlythietbi/products/...)
   final String? imageUrl;
 
   /// Kích thước width (default: fill parent)
@@ -39,7 +39,7 @@ class AzureImage extends StatelessWidget {
   /// Hiển thị text "Chưa có ảnh" trong fallback
   final bool showFallbackText;
 
-  const AzureImage({
+  const CloudImage({
     super.key,
     required this.imageUrl,
     this.width,
@@ -71,6 +71,11 @@ class AzureImage extends StatelessWidget {
         // ── Không giới hạn thời gian cache ──
         maxWidthDiskCache: 1024,
         maxHeightDiskCache: 1024,
+        // ── Thêm Headers giả lập trình duyệt để vượt qua Cloudflare Bot Protection ──
+        httpHeaders: const {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+        },
 
         // ── Loading placeholder — hiệu ứng shimmer ──
         placeholder: (context, url) => _buildLoadingPlaceholder(),

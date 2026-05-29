@@ -211,6 +211,32 @@ class DanhMucProvider extends ChangeNotifier {
   /// Lấy tên trạng thái
   String getTenTinhTrang(int id) => _service.getTenTinhTrang(id);
 
+  /// Lấy hoặc tạo QR Code cho thiết bị
+  Future<String?> generateQrCode(int thietBiId) async {
+    _isLoadingDetail = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final qrUrl = await _service.generateQrCode(thietBiId);
+      if (qrUrl != null) {
+        // Cập nhật lại list thietBiChiTiet cục bộ để hiển thị ảnh QR
+        final index = _thietBiChiTiet.indexWhere((tb) => tb['thietBiId'] == thietBiId);
+        if (index != -1) {
+          _thietBiChiTiet[index]['qrCodeUrl'] = qrUrl;
+        }
+      }
+      _isLoadingDetail = false;
+      notifyListeners();
+      return qrUrl;
+    } catch (e) {
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      _isLoadingDetail = false;
+      notifyListeners();
+      return null;
+    }
+  }
+
   /// Xóa thông báo lỗi
   void clearError() {
     _errorMessage = null;

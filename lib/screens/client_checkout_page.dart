@@ -6,7 +6,7 @@ import '../models/checkout_models.dart';
 import '../services/checkout_mock_data.dart';
 import '../services/checkout_service.dart';
 import '../widgets/address_card.dart';
-import '../widgets/azure_image.dart';
+import '../widgets/cloud_image.dart';
 import '../widgets/payment_method_selector.dart';
 import '../widgets/rental_duration_selector.dart';
 import '../widgets/order_summary_card.dart';
@@ -196,7 +196,7 @@ class _ClientCheckoutPageState extends State<ClientCheckoutPage> {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: AzureImage(
+              child: CloudImage(
                 imageUrl: item.anhDaiDien,
                 width: 72,
                 height: 72,

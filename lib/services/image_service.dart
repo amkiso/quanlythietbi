@@ -13,12 +13,12 @@ enum ImageCategory {
   work,      // Ảnh nghiệp vụ (giao nhận, bảo trì)
 }
 
-/// Service quản lý upload/tải/xóa ảnh thông qua Azure Blob Storage + SAS Token
+/// Service quản lý upload/tải/xóa ảnh thông qua Cloudflare R2 (S3 API)
 ///
 /// Luồng upload 3 bước:
-///   1. Lấy SAS URL từ server  →  [getUploadUrl]
-///   2. Upload file lên Azure   →  [uploadToAzure]
-///   3. Xác nhận với server     →  [confirmAvatar] / [confirmProductImage] / [confirmWorkImage]
+///   1. Lấy Presigned URL từ server  →  [getUploadUrl]
+///   2. Upload file lên R2           →  [uploadToCloudflare]
+///   3. Xác nhận với server          →  [confirmAvatar] / [confirmProductImage] / [confirmWorkImage]
 ///
 /// Tiện ích:
 ///   - [uploadAvatar]        — 3-in-1 helper cho avatar
@@ -32,18 +32,23 @@ class ImageService {
   //  BƯỚC 1: LẤY SAS URL
   // ══════════════════════════════════════════════════════
 
-  /// Lấy SAS URL upload có thời hạn 5 phút từ server.
+  /// Lấy Presigned URL upload có thời hạn 5 phút từ server.
   /// [category]: Loại container (user, products, work)
   /// [extension]: Định dạng file (mặc định: png)
+  /// [contentType]: Loại MIME type để đính kèm vào chữ ký (mặc định: image/png)
   Future<ApiResponse<SasUploadData>> getUploadUrl({
     required ImageCategory category,
     String extension = 'png',
+    String contentType = 'image/png',
   }) async {
     try {
       final categoryStr = category.name; // "user" | "products" | "work"
       final response = await _dio.get(
         '${ApiConfig.imagesEndpoint}/$categoryStr/get-upload-url',
-        queryParameters: {'extension': extension},
+        queryParameters: {
+          'extension': extension,
+          'contentType': contentType,
+        },
       );
 
       return ApiResponse<SasUploadData>.fromJson(
@@ -56,17 +61,17 @@ class ImageService {
   }
 
   // ══════════════════════════════════════════════════════
-  //  BƯỚC 2: UPLOAD TRỰC TIẾP LÊN AZURE (không qua server)
+  //  BƯỚC 2: UPLOAD TRỰC TIẾP LÊN CLOUDFLARE R2
   // ══════════════════════════════════════════════════════
 
-  /// Upload file binary lên Azure Blob Storage qua SAS URL.
+  /// Upload file binary lên Cloudflare R2 qua Presigned URL.
   /// Sử dụng Dio instance riêng (không gắn JWT interceptor).
-  /// [sasUrl]: URL đầy đủ nhận từ getUploadUrl
+  /// [presignedUrl]: URL đầy đủ nhận từ getUploadUrl
   /// [fileBytes]: Dữ liệu file dạng bytes
-  /// [contentType]: MIME type (mặc định: image/jpeg)
+  /// [contentType]: MIME type (mặc định: image/png)
   /// [onProgress]: Callback theo dõi tiến trình (0.0 → 1.0)
-  Future<void> uploadToAzure({
-    required String sasUrl,
+  Future<void> uploadToCloudflare({
+    required String presignedUrl,
     required Uint8List fileBytes,
     String contentType = 'image/png',
     void Function(double progress)? onProgress,
@@ -79,11 +84,10 @@ class ImageService {
 
     try {
       await azureDio.put(
-        sasUrl,
+        presignedUrl,
         data: Stream.fromIterable([fileBytes]),
         options: Options(
           headers: {
-            'x-ms-blob-type': 'BlockBlob',
             'Content-Type': contentType,
             'Content-Length': fileBytes.length,
           },
@@ -96,23 +100,23 @@ class ImageService {
       );
     } on DioException catch (e) {
       if (e.response?.statusCode == 403) {
-        throw Exception('SAS Token hết hạn. Vui lòng thử lại.');
+        throw Exception('URL hết hạn hoặc sai chữ ký. Vui lòng thử lại.');
       }
-      throw Exception('Lỗi upload lên Azure: ${e.message}');
+      throw Exception('Lỗi upload lên Cloudflare R2: ${e.message}');
     }
   }
 
   /// Upload file từ đường dẫn File (tiện khi dùng image_picker).
-  Future<void> uploadFileToAzure({
-    required String sasUrl,
+  Future<void> uploadFileToCloudflare({
+    required String presignedUrl,
     required File file,
     String? contentType,
     void Function(double progress)? onProgress,
   }) async {
     final bytes = await file.readAsBytes();
     final mime = contentType ?? _getMimeType(file.path);
-    await uploadToAzure(
-      sasUrl: sasUrl,
+    await uploadToCloudflare(
+      presignedUrl: presignedUrl,
       fileBytes: bytes,
       contentType: mime,
       onProgress: onProgress,
@@ -207,8 +211,8 @@ class ImageService {
   //  XÓA ẢNH
   // ══════════════════════════════════════════════════════
 
-  /// Xóa ảnh khỏi Azure Blob Storage + Database.
-  /// Server tự phát hiện container từ URL.
+  /// Xóa ảnh khỏi Database và Cloudflare R2.
+  /// Server tự trích xuất đường dẫn tương đối từ URL.
   /// DELETE /api/images/{hinhAnhId}
   Future<ApiResponse<void>> deleteImage(int hinhAnhId) async {
     try {
@@ -237,17 +241,20 @@ class ImageService {
   }) async {
     final ext = _getExtension(file.path);
 
-    // Bước 1: Lấy SAS URL
+    // Bước 1: Lấy Presigned URL
+    final mime = _getMimeType(file.path);
     final sasResponse = await getUploadUrl(
       category: ImageCategory.user,
       extension: ext,
+      contentType: mime,
     );
     final sasData = sasResponse.data!;
 
-    // Bước 2: Upload lên Azure
-    await uploadFileToAzure(
-      sasUrl: sasData.sasUrl,
+    // Bước 2: Upload lên R2
+    await uploadFileToCloudflare(
+      presignedUrl: sasData.sasUrl,
       file: file,
+      contentType: mime,
       onProgress: onProgress,
     );
 
@@ -266,15 +273,18 @@ class ImageService {
   }) async {
     final ext = _getExtension(file.path);
 
+    final mime = _getMimeType(file.path);
     final sasResponse = await getUploadUrl(
       category: ImageCategory.products,
       extension: ext,
+      contentType: mime,
     );
     final sasData = sasResponse.data!;
 
-    await uploadFileToAzure(
-      sasUrl: sasData.sasUrl,
+    await uploadFileToCloudflare(
+      presignedUrl: sasData.sasUrl,
       file: file,
+      contentType: mime,
       onProgress: onProgress,
     );
 
@@ -298,15 +308,18 @@ class ImageService {
   }) async {
     final ext = _getExtension(file.path);
 
+    final mime = _getMimeType(file.path);
     final sasResponse = await getUploadUrl(
       category: ImageCategory.work,
       extension: ext,
+      contentType: mime,
     );
     final sasData = sasResponse.data!;
 
-    await uploadFileToAzure(
-      sasUrl: sasData.sasUrl,
+    await uploadFileToCloudflare(
+      presignedUrl: sasData.sasUrl,
       file: file,
+      contentType: mime,
       onProgress: onProgress,
     );
 
